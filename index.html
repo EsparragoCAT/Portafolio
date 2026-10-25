@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es" class="crt-scan">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EsparragoCAT</title>
+  <meta name="description" content="Esparrago: diseño de juegos, mods de Minecraft, historias, música y software.">
+  <meta name="theme-color" content="#030603">
+  <meta property="og:title" content="EsparragoCAT">
+  <meta property="og:description" content="Juegos, mods, historias, música y software.">
+  <meta property="og:image" content="assets/img/portrait-bg.webp">
+  <link rel="icon" href="assets/img/favicon.webp" type="image/webp">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+  <script>
+    document.documentElement.classList.add('js');
+    try { var m = localStorage.getItem('crt'); if (m) document.documentElement.className = document.documentElement.className.replace('crt-scan', 'crt-' + m); } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Saltar al contenido</a>
+
+  <div id="crt-layers" aria-hidden="true"><div class="l-scan"></div><div class="l-vig"></div></div>
+
+  <header id="hud">
+    <a class="brand" href="#top"><span class="dot" aria-hidden="true"></span>ESPARRAGO<b>CAT</b></a>
+    <nav aria-label="Secciones">
+      <a href="#musica">música</a>
+      <a href="#github">github</a>
+      <a href="#proyectos">proyectos</a>
+    </nav>
+    <div class="seg" role="radiogroup" aria-label="Efecto de monitor CRT" id="crt-select">
+      <button role="radio" data-mode="off" aria-checked="false">OFF</button>
+      <button role="radio" data-mode="scan" aria-checked="true">SCAN</button>
+      <button role="radio" data-mode="full" aria-checked="false">FULL</button>
+    </div>
+  </header>
+
+  <div class="shell" id="top">
+    <aside id="profile" aria-label="Perfil">
+      <div class="panel">
+        <div class="avatar">
+          <img src="assets/img/portrait-bg.webp" alt="Orion, mi personaje: alien verde con antenas amarillas" width="640" height="640" fetchpriority="high">
+          <img class="avatar-cat" src="assets/img/cat.webp" alt="" width="200" height="200">
+        </div>
+        <h1>Esparrago</h1>
+        <p class="role">Juegos, mods, historias y código.</p>
+        <ul class="links">
+          <li><a href="https://www.youtube.com/@Esparragoh" rel="me">YouTube</a></li>
+          <li><a href="https://soundcloud.com/esparragocat" rel="me">SoundCloud</a></li>
+          <li><a href="https://github.com/EsparragoCAT" rel="me">GitHub</a></li>
+        </ul>
+      </div>
+
+      <div class="panel mini">
+        <button class="btn solid" id="mini-play" aria-label="Reproducir o pausar la música">▶</button>
+        <div>
+          <div id="mini-title" class="mini-title">Sin reproducir</div>
+          <div class="note">sintetizado en vivo</div>
+        </div>
+      </div>
+    </aside>
+
+    <main id="main" tabindex="-1">
+      <section class="panel intro reveal" aria-labelledby="intro-h">
+        <h2 id="intro-h">Diseño juegos y mods, y arreglo lo que se rompe.</h2>
+        <p class="lead">
+          Invento los mundos donde pasan las cosas y, cuando algo falla, me quedo hasta encontrar por qué.
+          Me importa más que un sistema <em>se sienta bien</em> a que se vea complicado.
+        </p>
+        <ul class="skills">
+          <li><b>Game y level design</b>Mecánicas, progresión, balance de combate y economías.</li>
+          <li><b>Storyteller</b>Lore, personajes y ramas narrativas con consecuencias.</li>
+          <li><b>TI Auditor</b>Encontrar dónde se rompe un juego o un programa antes que los jugadores.</li>
+          <li><b>Manager</b>Priorizar, recortar alcance y que el proyecto salga.</li>
+          <li><b>Debugger</b>Mods en Java, apps de escritorio y Rust.</li>
+          <li><b>Compositor</b>OST y cantante.</li>
+        </ul>
+      </section>
+
+      <section id="musica" class="panel reveal" aria-labelledby="ost-h">
+        <div class="head">
+          <h2 id="ost-h">Música</h2>
+          <span class="tag" id="ost-tag">en pausa</span>
+        </div>
+        <p class="desc">Tres pistas generadas en tiempo real con osciladores y ruido, sin archivos de audio, pasando por un ecualizador de 5 bandas. Lo que compongo de verdad está en <a href="https://soundcloud.com/esparragocat">SoundCloud</a>.</p>
+        <div class="ost">
+          <div class="ost-main">
+            <div class="ost-row">
+              <button class="btn solid" id="ost-play">▶ Play</button>
+              <div class="seg" role="radiogroup" aria-label="Pista" id="ost-tracks"></div>
+            </div>
+            <div class="inset">
+              <div id="ost-title" class="ost-title">—</div>
+              <div id="ost-meta" class="note">—</div>
+            </div>
+            <label class="ctl"><span>Volumen</span><output></output><input type="range" id="ost-vol" min="0" max="100" step="1" value="70"></label>
+            <canvas class="viz" id="ost-viz" width="560" height="130" aria-label="Analizador de espectro"></canvas>
+          </div>
+          <div class="inset">
+            <p class="sub">Ecualizador</p>
+            <div class="eq-presets" id="eq-presets"></div>
+            <div class="eq-bands" id="eq-bands"></div>
+            <canvas class="viz eq" id="eq-curve" width="560" height="110" aria-label="Curva de respuesta del ecualizador"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section id="github" class="panel reveal" aria-labelledby="gh-h">
+        <div class="head">
+          <h2 id="gh-h">Últimos en GitHub</h2>
+          <a class="tag" href="https://github.com/EsparragoCAT">ver perfil</a>
+        </div>
+        <ul class="repos" id="repos" aria-live="polite">
+          <li class="note">Cargando repositorios…</li>
+        </ul>
+      </section>
+
+      <section id="proyectos" class="panel reveal" aria-labelledby="proy-h">
+        <h2 id="proy-h">Proyectos</h2>
+        <dl class="projects">
+          <div>
+            <dt>Sparrafy <span>Rust · Tauri v2</span></dt>
+            <dd>Mi cliente de música para escritorio. Lo quería liviano y a mi gusto, y terminó siendo la excusa para aprender Rust en serio.</dd>
+          </div>
+          <div>
+            <dt>Mods de Minecraft <span>Java</span></dt>
+            <dd>Nectaropolis, Songs of Elysis y otros. Es donde más diseño: bloques, sistemas, interfaces y mucho log de errores.</dd>
+          </div>
+          <div>
+            <dt>Elysis Management <span>Electron · Node</span></dt>
+            <dd>App interna para organizar el equipo de Elysis: proyectos, reuniones y actualizaciones automáticas.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section id="ttk" class="panel reveal" aria-labelledby="ttk-h">
+        <h2 id="ttk-h">¿Cuánto tarda en morir?</h2>
+        <p class="desc">Una calculadora de balance. Mové los valores y mirá el tiempo para matar a un enemigo.</p>
+        <div class="ttk">
+          <div class="ttk-ctl" id="ttk-ctl"></div>
+          <div class="ttk-out inset">
+            <p class="ttk-num"><span id="ttk-val">--</span> s</p>
+            <p id="ttk-hits" class="note"></p>
+            <p id="ttk-verdict"></p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="foot">
+    <p class="foot-name">EsparragoCAT</p>
+    <p class="note">Hecho a mano, sin frameworks.</p>
+  </footer>
+
+  <script src="js/site.js" defer></script>
+  <script src="js/audio.js" defer></script>
+</body>
+</html>
