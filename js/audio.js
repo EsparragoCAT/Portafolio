@@ -15,7 +15,12 @@
     { id: 'bandera', name: ['Flag', 'Bandera'], moment: ['Capture the flag', 'Captura de bandera'], style: ['80s synth', 'Synth 80'], bpm: 110 },
     { id: 'boss', name: ['Boss', 'Jefe'], moment: ['Boss fight', 'Pelea contra el jefe'], style: ['Epic with choir', 'Épico con coro'], bpm: 108 },
     { id: 'results', name: ['Winners', 'Ganadores'], moment: ['Results screen', 'Pantalla de resultados'], style: ['Hybrid cinematic', 'Cine híbrido'], bpm: 114 },
+    // Pillar Pummel Reloaded: un solo archivo con la mezcla entera (sin capas), hecho en CATStudio.
+    { id: 'pp_lobby', pp: true, name: 'Lobby', moment: ['Lobby and waiting', 'Lobby y espera'], style: 'Vaporwave', bpm: 69 },
+    { id: 'pp_match', pp: true, name: ['Match', 'Partida'], moment: ['Mid-match', 'En plena partida'], style: 'Vaporwave', bpm: 108 },
+    { id: 'pp_final', pp: true, name: ['Last minute', 'Último minuto'], moment: ['Double points, last minute', 'Último minuto, puntos dobles'], style: 'Vaporwave', bpm: 114 },
   ];
+  const PROJECT = (t) => (t.pp ? 'Pillar Pummel' : 'Firefly');
   const LAYERS = [
     { id: 'base', name: 'Base', what: ['Chords and arpeggio', 'Acordes y arpegio'] },
     { id: 'rhythm', name: ['Rhythm', 'Ritmo'], what: ['Drums and bass', 'Batería y bajo'] },
@@ -38,26 +43,29 @@
     return a.canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'm4a';
   })();
 
-  let ctx = null, master = null, analyser = null, layerGains = [], layerMeters = [];
+  let ctx = null, master = null, analyser = null, fullGain = null, layerGains = [], layerMeters = [];
   let themeIdx = 0, playing = false, current = null; // current = { idx, sources: [] }
   const levels = SCENES[0].levels.slice();
   const muted = [false, false, false];
   const buffers = new Map();
 
   /* ---------- UI ---------- */
-  const temasEl = $('#ost-temas'), escenasEl = $('#ost-escenas'), capasEl = $('#ost-capas');
+  const temasEl = $('#ost-temas'), ppEl = $('#pp-temas'), escenasEl = $('#ost-escenas'), capasEl = $('#ost-capas');
   const playBtn = $('#ost-play'), miniBtn = $('#mini-play'), miniTitle = $('#mini-title');
-  const tag = $('#ost-tag');
+  const tag = $('#ost-tag'), consola = $('.consola');
 
-  THEMES.forEach((t, i) => {
+  const temaBtns = THEMES.map((t, i) => {
+    const n = t.pp ? THEMES.filter((x, j) => x.pp && j <= i).length : i + 1;
     const li = document.createElement('li');
     li.innerHTML = `<button type="button" class="tema" aria-pressed="${i === 0}">
-        <span class="tema-n">${String(i + 1).padStart(2, '0')}</span>
+        <span class="tema-n">${String(n).padStart(2, '0')}</span>
         <span class="tema-txt"><b></b><small></small></span>
         <span class="tema-bpm">${t.bpm}</span>
       </button>`;
-    li.querySelector('button').addEventListener('click', () => select(i, true));
-    temasEl.append(li);
+    const b = li.querySelector('button');
+    b.addEventListener('click', () => select(i, true));
+    (t.pp ? ppEl : temasEl).append(li);
+    return b;
   });
 
   SCENES.forEach((sc, i) => {
@@ -93,7 +101,7 @@
 
   // Pone los nombres en el idioma actual (al arrancar y cada vez que se cambia).
   function labels() {
-    temasEl.querySelectorAll('.tema').forEach((b, i) => {
+    temaBtns.forEach((b, i) => {
       b.querySelector('b').textContent = L(THEMES[i].name);
       b.querySelector('small').textContent = L(THEMES[i].style);
     });
@@ -130,12 +138,15 @@
     const name = L(t.name);
     $('#ost-title').textContent = name;
     $('#ost-momento').textContent = L(t.moment);
-    $('#ost-meta').textContent = `${L(t.style)} · ${t.bpm} BPM · ${I18N.t('3 looping layers', '3 capas en loop')}`;
-    temasEl.querySelectorAll('.tema').forEach((b, j) => b.setAttribute('aria-pressed', String(j === themeIdx)));
+    $('#ost-meta').textContent = `${L(t.style)} · ${t.bpm} BPM · ${t.pp ? I18N.t('full mix, no layers', 'mezcla completa, sin capas') : I18N.t('3 looping layers', '3 capas en loop')}`;
+    temaBtns.forEach((b, j) => b.setAttribute('aria-pressed', String(j === themeIdx)));
+    // Los temas de Pillar Pummel no vienen en capas: escenas y faders quedan apagados.
+    consola.classList.toggle('sin-capas', !!t.pp);
+    consola.querySelectorAll('.escenas button, .capas button, .capas input').forEach((el) => { el.disabled = !!t.pp; });
     tag.textContent = L(STATES[state || (playing ? 'playing' : 'paused')]);
     playBtn.textContent = playing ? I18N.t('❚❚ Pause', '❚❚ Pausa') : '▶ Play';
     miniBtn.textContent = playing ? '❚❚' : '▶';
-    miniTitle.textContent = playing ? `Firefly · ${name}` : I18N.t('Not playing', 'Sin reproducir');
+    miniTitle.textContent = playing ? `${PROJECT(t)} · ${name}` : I18N.t('Not playing', 'Sin reproducir');
   }
 
   /* ---------- audio ---------- */
@@ -148,14 +159,16 @@
     master.connect(analyser); analyser.connect(ctx.destination);
     layerGains = LAYERS.map(() => { const g = ctx.createGain(); g.gain.value = 0; g.connect(master); return g; });
     layerMeters = LAYERS.map((_, i) => { const a = ctx.createAnalyser(); a.fftSize = 512; layerGains[i].connect(a); return a; });
+    fullGain = ctx.createGain(); fullGain.gain.value = 0.8; fullGain.connect(master);
   }
 
   async function load(idx) {
-    const id = THEMES[idx].id;
+    const t = THEMES[idx], id = t.id;
     if (buffers.has(id)) return buffers.get(id);
-    const job = Promise.all(LAYERS.map(async (ly) => {
+    const files = t.pp ? [id] : LAYERS.map((ly) => `${id}_${ly.id}`);
+    const job = Promise.all(files.map(async (file) => {
       const tryFmt = async (fmt) => {
-        const res = await fetch(`assets/music/${id}_${ly.id}.${fmt}`);
+        const res = await fetch(`assets/music/${file}.${fmt}`);
         if (!res.ok) throw new Error(res.status);
         const data = await res.arrayBuffer();
         return await new Promise((ok, bad) => ctx.decodeAudioData(data, ok, bad));
@@ -185,7 +198,7 @@
       src.buffer = buf; src.loop = true;
       const fade = ctx.createGain();
       fade.gain.setValueAtTime(0, when); fade.gain.linearRampToValueAtTime(1, when + 0.6);
-      src.connect(fade); fade.connect(layerGains[i]);
+      src.connect(fade); fade.connect(THEMES[idx].pp ? fullGain : layerGains[i]);
       src.start(when);
       return { src, fade };
     });

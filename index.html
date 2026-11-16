@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@500&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/site.css?v=3">
+  <link rel="stylesheet" href="css/site.css?v=4">
   <script>
     document.documentElement.classList.add('js');
     try { var m = localStorage.getItem('crt'); if (m) document.documentElement.className = document.documentElement.className.replace('crt-scan', 'crt-' + m); } catch (e) {}
@@ -186,13 +186,18 @@
         <!-- música adaptativa -->
         <article class="caja caja-musica" id="musica" aria-labelledby="ost-h">
           <div class="caja-cab">
-            <h3 id="ost-h" data-es="Música adaptativa · Project: Firefly">Adaptive music · Project: Firefly</h3>
+            <h3 id="ost-h" data-es="Música de mis juegos">Music from my games</h3>
             <span class="chip" id="ost-tag">paused</span>
           </div>
-          <p class="desc" data-es="Los temas que hice para Firefly, el shooter que vive dentro de la serie. Cada uno es un loop en tres capas y el mod sube o baja cada capa según lo que pasa en la partida. Acá la mezcla la hacés vos.">The tracks I made for Firefly, the shooter that lives inside the series. Each one is a three-layer loop, and the mod raises or lowers each layer depending on what's happening in the match. Here, you do the mixing.</p>
+          <p class="desc" data-es="Los temas que hice para Firefly, el shooter que vive dentro de la serie. Cada uno es un loop en tres capas y el mod sube o baja cada capa según lo que pasa en la partida. Acá la mezcla la hacés vos. Abajo, los temas vaporwave de Pillar Pummel Reloaded, hechos en CATStudio.">The tracks I made for Firefly, the shooter that lives inside the series. Each one is a three-layer loop, and the mod raises or lowers each layer depending on what's happening in the match. Here, you do the mixing. Below them, the vaporwave themes from Pillar Pummel Reloaded, made in CATStudio.</p>
 
           <div class="mezcla">
-            <ol class="temas" id="ost-temas" aria-label="Tracks" data-es-aria-label="Temas"></ol>
+            <div class="listas">
+              <p class="temas-grupo" id="ff-g">Project: Firefly <span data-es="adaptativa">adaptive</span></p>
+              <ol class="temas" id="ost-temas" aria-labelledby="ff-g"></ol>
+              <p class="temas-grupo" id="pp-g">Pillar Pummel Reloaded <span>vaporwave</span></p>
+              <ol class="temas" id="pp-temas" aria-labelledby="pp-g"></ol>
+            </div>
 
             <div class="consola">
               <div class="ahora-suena">
@@ -246,7 +251,7 @@
     </div>
   </footer>
 
-  <script src="js/site.js?v=3" defer></script>
-  <script src="js/audio.js?v=3" defer></script>
+  <script src="js/site.js?v=4" defer></script>
+  <script src="js/audio.js?v=4" defer></script>
 </body>
 </html>

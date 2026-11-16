@@ -239,6 +239,11 @@ canvas.viz { width: 100%; height: 160px; display: block; background: #040704; }
 .capa-mute:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
 .capa.apagada .capa-mute { background: transparent; color: var(--liquen); box-shadow: inset 0 0 0 1px var(--linea); }
 .capa.apagada .capa-ctl { opacity: .45; }
+.listas { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.temas-grupo { display: flex; justify-content: space-between; gap: 8px; font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--verde); padding: 4px 2px 0; }
+.temas-grupo span { color: var(--liquen); }
+.temas-grupo:not(:first-child) { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--linea); }
+.sin-capas .escenas, .sin-capas .capas { opacity: .32; pointer-events: none; transition: opacity .2s; }
 .capa-ctl { display: grid; gap: 2px; min-width: 0; }
 .capa-meter { height: 3px; background: var(--linea); overflow: hidden; }
 .capa-meter i { display: block; height: 100%; background: var(--verde); transform-origin: left; transform: scaleX(0); transition: transform .08s linear; }
