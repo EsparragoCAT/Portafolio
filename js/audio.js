@@ -1,247 +1,254 @@
+/* Música adaptativa de Project: Firefly.
+   Cada tema son tres stems del mismo largo (base, ritmo, lead) que suenan juntos en loop sin corte.
+   Igual que MusicDirector en el mod: no se cambia de pista, se sube y baja cada capa. */
 (function () {
   const $ = (s) => document.querySelector(s);
-  const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
-  const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
-  const TRACKS = [
-    {
-      title: 'Subnivel 7', sub: 'ambient · La menor', bpm: 70,
-      roots: [33, 29, 36, 31], chords: [[57, 60, 64], [53, 57, 60], [55, 60, 64], [55, 59, 62]],
-      arp: [0, -1, 1, -1, 2, -1, 1, -1, 0, -1, 2, -1, 1, -1, 2, 1], arpWave: 'triangle', arpOct: 12, bass: 'sine',
-      pad: true, kick: [], snare: [], hat: [2, 6, 10, 14], hatVol: 0.05,
-    },
-    {
-      title: 'Equilibrio // Jefe', sub: 'combate · Re menor', bpm: 140,
-      roots: [38, 34, 41, 36], chords: [[62, 65, 69], [58, 62, 65], [60, 65, 69], [60, 64, 67]],
-      arp: [0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 2, 1, 0, 1], arpWave: 'square', arpOct: 12, bass: 'sawtooth', bassEighths: true,
-      pad: false, kick: [0, 4, 8, 12], snare: [4, 12], hat: [0, 2, 4, 6, 8, 10, 12, 14], hatVol: 0.07,
-    },
-    {
-      title: 'Terminal Idle', sub: 'chiptune · Mi menor', bpm: 100,
-      roots: [40, 36, 43, 38], chords: [[64, 67, 71], [60, 64, 67], [62, 67, 71], [62, 66, 69]],
-      arp: [0, 2, 1, 2, 0, 2, 1, 2, 2, 1, 0, 1, 2, 1, 0, 1], arpWave: 'square', arpOct: 12, bass: 'triangle',
-      pad: false, kick: [0, 8], snare: [12], hat: Array.from({ length: 16 }, (_, i) => i), hatVol: 0.03,
-    },
+  const THEMES = [
+    { id: 'lobby', name: 'Lobby', moment: 'Espera y cuenta regresiva', style: 'Ambient tenso', bpm: 61 },
+    { id: 'todos', name: 'Todos contra todos', moment: 'Modo libre', style: 'Darksynth', bpm: 123 },
+    { id: 'pvp', name: 'PVP', moment: 'PVP puro', style: 'Industrial', bpm: 127 },
+    { id: 'pve', name: 'Oleadas', moment: 'PVE contra drones', style: 'Drum and bass oscuro', bpm: 174 },
+    { id: 'hardpoint', name: 'Hardpoint', moment: 'Control de zona', style: 'Midtempo cyber', bpm: 121 },
+    { id: 'bandera', name: 'Bandera', moment: 'Captura de bandera', style: 'Synth 80', bpm: 110 },
+    { id: 'boss', name: 'Jefe', moment: 'Pelea contra el jefe', style: 'Épico con coro', bpm: 108 },
+    { id: 'results', name: 'Ganadores', moment: 'Pantalla de resultados', style: 'Cine híbrido', bpm: 114 },
+  ];
+  const LAYERS = [
+    { id: 'base', name: 'Base', what: 'Acordes y arpegio' },
+    { id: 'rhythm', name: 'Ritmo', what: 'Batería y bajo' },
+    { id: 'lead', name: 'Lead', what: 'Melodía' },
+  ];
+  // Los mismos niveles que usa MusicDirector (base, ritmo, lead).
+  const SCENES = [
+    { id: 'calma', name: 'Calma', levels: [0.9, 0.6, 0.3] },
+    { id: 'pelea', name: 'Pelea', levels: [0.9, 1, 0.9] },
+    { id: 'caido', name: 'Caído', levels: [0.45, 0.3, 0.15] },
+    { id: 'todo', name: 'Todo', levels: [1, 1, 1] },
   ];
 
-  const EQ_FREQS = [60, 250, 1000, 4000, 12000];
-  const EQ_TYPES = ['lowshelf', 'peaking', 'peaking', 'peaking', 'highshelf'];
-  const EQ_LABELS = ['60', '250', '1k', '4k', '12k'];
-  const PRESETS = { Flat: [0, 0, 0, 0, 0], 'Bass+': [8, 4, 0, -1, -2], 'Lo-fi': [3, 4, 2, -5, -10], Bright: [-2, -1, 1, 5, 8], Voces: [-4, 1, 5, 3, 0] };
+  const FORMAT = (() => {
+    const a = document.createElement('audio');
+    return a.canPlayType('audio/ogg; codecs="vorbis"') ? 'ogg' : 'm4a';
+  })();
 
-  let ctx = null, bus, eq = [], master, analyser, noiseBuf;
-  let trackIdx = 0, step = 0, nextT = 0, timer = null, playing = false;
-  const gains = [0, 0, 0, 0, 0];
+  let ctx = null, master = null, analyser = null, layerGains = [], layerMeters = [];
+  let themeIdx = 0, playing = false, current = null; // current = { idx, sources: [] }
+  const levels = SCENES[0].levels.slice();
+  const muted = [false, false, false];
+  const buffers = new Map();
 
-  const tracksEl = $('#ost-tracks');
-  TRACKS.forEach((t, i) => {
+  /* ---------- UI ---------- */
+  const temasEl = $('#ost-temas'), escenasEl = $('#ost-escenas'), capasEl = $('#ost-capas');
+  const playBtn = $('#ost-play'), miniBtn = $('#mini-play'), miniTitle = $('#mini-title');
+  const tag = $('#ost-tag');
+
+  THEMES.forEach((t, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<button type="button" class="tema" aria-pressed="${i === 0}">
+        <span class="tema-n">${String(i + 1).padStart(2, '0')}</span>
+        <span class="tema-txt"><b>${t.name}</b><small>${t.style}</small></span>
+        <span class="tema-bpm">${t.bpm}</span>
+      </button>`;
+    li.querySelector('button').addEventListener('click', () => select(i, true));
+    temasEl.append(li);
+  });
+
+  SCENES.forEach((sc, i) => {
     const b = document.createElement('button');
-    b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(i === 0));
-    b.textContent = 'T' + (i + 1); b.title = t.title;
-    b.addEventListener('click', () => select(i));
-    tracksEl.append(b);
+    b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.i = i;
+    b.setAttribute('aria-checked', String(i === 0)); b.textContent = sc.name;
+    b.addEventListener('click', () => applyScene(i));
+    escenasEl.append(b);
   });
 
-  const sliders = EQ_FREQS.map((f, i) => {
-    const d = document.createElement('div');
-    d.className = 'eq-band';
-    d.innerHTML = `<output>0</output><input class="eq-slider" type="range" min="-12" max="12" step="1" value="0" aria-label="${EQ_LABELS[i]} Hz"><span>${EQ_LABELS[i]}</span>`;
-    const inp = d.querySelector('input'), out = d.querySelector('output');
-    inp.addEventListener('input', () => setBand(i, +inp.value));
-    $('#eq-bands').append(d);
-    return { inp, out };
+  const faders = LAYERS.map((ly, i) => {
+    const row = document.createElement('div');
+    row.className = 'capa';
+    row.innerHTML = `
+      <button type="button" class="capa-mute" aria-pressed="true" aria-label="Silenciar ${ly.name}">${ly.name}</button>
+      <div class="capa-ctl">
+        <label class="nota" for="capa-${ly.id}">${ly.what}</label>
+        <input type="range" id="capa-${ly.id}" min="0" max="100" step="1" value="${Math.round(levels[i] * 100)}">
+        <span class="capa-meter" aria-hidden="true"><i></i></span>
+      </div>
+      <output class="capa-val">${Math.round(levels[i] * 100)}</output>`;
+    const input = row.querySelector('input'), out = row.querySelector('output'), mute = row.querySelector('.capa-mute');
+    input.addEventListener('input', () => { levels[i] = input.value / 100; out.textContent = input.value; clearScene(); updateGains(); });
+    mute.addEventListener('click', () => {
+      muted[i] = !muted[i];
+      mute.setAttribute('aria-pressed', String(!muted[i]));
+      row.classList.toggle('apagada', muted[i]);
+      updateGains();
+    });
+    capasEl.append(row);
+    return { input, out, meter: row.querySelector('.capa-meter i') };
   });
-
-  Object.entries(PRESETS).forEach(([name, vals]) => {
-    const b = document.createElement('button');
-    b.className = 'btn sm'; b.textContent = name;
-    b.addEventListener('click', () => vals.forEach((v, i) => { sliders[i].inp.value = v; setBand(i, v); }));
-    $('#eq-presets').append(b);
-  });
-
-  function setBand(i, db) {
-    gains[i] = db;
-    sliders[i].out.textContent = (db > 0 ? '+' : '') + db;
-    if (eq[i]) eq[i].gain.setTargetAtTime(db, ctx.currentTime, 0.02);
-    drawCurve();
-  }
 
   const vol = $('#ost-vol'), volOut = vol.parentElement.querySelector('output');
-  try { vol.value = localStorage.getItem('vol') || 70; } catch (e) {}
-  vol.addEventListener('input', () => { applyVol(); try { localStorage.setItem('vol', vol.value); } catch (e) {} });
-  function applyVol() {
-    volOut.textContent = vol.value + '%';
-    if (master) master.gain.setTargetAtTime((vol.value / 100) * 0.9, ctx.currentTime, 0.02);
-  }
-  applyVol();
+  const showVol = () => { volOut.textContent = vol.value + '%'; };
+  vol.addEventListener('input', () => { showVol(); if (master) master.gain.setTargetAtTime(vol.value / 100, ctx.currentTime, 0.05); });
+  showVol();
 
-  function init() {
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-    bus = ctx.createGain(); bus.gain.value = 0.8;
-    eq = EQ_FREQS.map((f, i) => {
-      const n = ctx.createBiquadFilter();
-      n.type = EQ_TYPES[i]; n.frequency.value = f; n.Q.value = 1.0; n.gain.value = gains[i];
-      return n;
+  function applyScene(i) {
+    SCENES[i].levels.forEach((v, j) => { levels[j] = v; faders[j].input.value = Math.round(v * 100); faders[j].out.textContent = Math.round(v * 100); });
+    escenasEl.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(+b.dataset.i === i)));
+    updateGains();
+  }
+  function clearScene() {
+    const match = SCENES.findIndex((sc) => sc.levels.every((v, j) => Math.abs(v - levels[j]) < 0.005));
+    escenasEl.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(+b.dataset.i === match)));
+  }
+
+  function emit(state) {
+    const t = THEMES[themeIdx];
+    $('#ost-title').textContent = t.name;
+    $('#ost-momento').textContent = t.moment;
+    $('#ost-meta').textContent = `${t.style} · ${t.bpm} BPM · 3 capas en loop`;
+    temasEl.querySelectorAll('.tema').forEach((b, j) => b.setAttribute('aria-pressed', String(j === themeIdx)));
+    const label = state || (playing ? 'sonando' : 'en pausa');
+    tag.textContent = label;
+    playBtn.textContent = playing ? '❚❚ Pausa' : '▶ Play';
+    miniBtn.textContent = playing ? '❚❚' : '▶';
+    miniTitle.textContent = playing ? `Firefly · ${t.name}` : 'Sin reproducir';
+  }
+
+  /* ---------- audio ---------- */
+  function ensureCtx() {
+    if (ctx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value = vol.value / 100;
+    analyser = ctx.createAnalyser(); analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.82;
+    master.connect(analyser); analyser.connect(ctx.destination);
+    layerGains = LAYERS.map(() => { const g = ctx.createGain(); g.gain.value = 0; g.connect(master); return g; });
+    layerMeters = LAYERS.map((_, i) => { const a = ctx.createAnalyser(); a.fftSize = 512; layerGains[i].connect(a); return a; });
+  }
+
+  async function load(idx) {
+    const id = THEMES[idx].id;
+    if (buffers.has(id)) return buffers.get(id);
+    const job = Promise.all(LAYERS.map(async (ly) => {
+      const tryFmt = async (fmt) => {
+        const res = await fetch(`assets/music/${id}_${ly.id}.${fmt}`);
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.arrayBuffer();
+        return await new Promise((ok, bad) => ctx.decodeAudioData(data, ok, bad));
+      };
+      try { return await tryFmt(FORMAT); } catch (e) { return await tryFmt(FORMAT === 'ogg' ? 'm4a' : 'ogg'); }
+    }));
+    buffers.set(id, job);
+    job.catch(() => buffers.delete(id));
+    return job;
+  }
+
+  function target(i) { return muted[i] ? 0 : levels[i] * 0.8; } // 0.8 = MIX del mod
+  function updateGains() {
+    if (!ctx || !current) return;
+    layerGains.forEach((g, i) => g.gain.setTargetAtTime(target(i), ctx.currentTime, 0.25));
+  }
+
+  async function start(idx) {
+    emit('cargando');
+    let bufs;
+    try { bufs = await load(idx); } catch (e) { playing = false; emit('no se pudo cargar'); return; }
+    if (!playing || idx !== themeIdx) return; // cambiaron de idea mientras cargaba
+    const old = current;
+    const when = ctx.currentTime + 0.06;
+    const sources = bufs.map((buf, i) => {
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.loop = true;
+      const fade = ctx.createGain();
+      fade.gain.setValueAtTime(0, when); fade.gain.linearRampToValueAtTime(1, when + 0.6);
+      src.connect(fade); fade.connect(layerGains[i]);
+      src.start(when);
+      return { src, fade };
     });
-    const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -14; comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.15;
-    master = ctx.createGain();
-    analyser = ctx.createAnalyser(); analyser.fftSize = 512; analyser.smoothingTimeConstant = 0.8;
-    let prev = bus;
-    eq.forEach((n) => { prev.connect(n); prev = n; });
-    prev.connect(comp); comp.connect(master); master.connect(analyser); analyser.connect(ctx.destination);
-    applyVol();
-
-    noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
-    const d = noiseBuf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  }
-
-  function tone(freq, t, dur, type, v, opts = {}) {
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.type = type; o.frequency.setValueAtTime(freq, t);
-    let node = o;
-    if (opts.lp) { const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = opts.lp; o.connect(f); node = f; }
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(v, t + (opts.attack || 0.005));
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    node.connect(g); g.connect(bus);
-    o.start(t); o.stop(t + dur + 0.05);
-  }
-  function noise(t, dur, v, hp) {
-    const s = ctx.createBufferSource(); s.buffer = noiseBuf;
-    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    s.connect(f); f.connect(g); g.connect(bus);
-    s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
-  }
-  function kick(t) {
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.12);
-    g.gain.setValueAtTime(0.7, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-    o.connect(g); g.connect(bus); o.start(t); o.stop(t + 0.25);
-  }
-
-  function playStep(tr, s, t) {
-    const bar = Math.floor(s / 16) % 4, k = s % 16;
-    const sd = 60 / tr.bpm / 4;
-    const chord = tr.chords[bar];
-    if (k === 0 && tr.pad) chord.forEach((n, i) => tone(mtof(n - 12 + (i === 2 ? 12 : 0)), t, sd * 16, 'sawtooth', 0.025, { lp: 700, attack: 0.5 }));
-    if (tr.bassEighths) { if (k % 2 === 0) tone(mtof(tr.roots[bar]), t, sd * 1.8, tr.bass, 0.16, { lp: 600 }); }
-    else if (k % 8 === 0) tone(mtof(tr.roots[bar]), t, sd * 7.5, tr.bass, 0.22, tr.bass === 'sine' ? {} : { lp: 500 });
-    const a = tr.arp[k];
-    if (a >= 0) tone(mtof(chord[a] + tr.arpOct), t, sd * 1.6, tr.arpWave, tr.arpWave === 'square' ? 0.045 : 0.08, { lp: 3500 });
-    if (tr.kick.includes(k)) kick(t);
-    if (tr.snare.includes(k)) noise(t, 0.14, 0.22, 1800);
-    if (tr.hat.includes(k)) noise(t, 0.04, tr.hatVol, 7000);
-  }
-
-  function scheduler() {
-    const tr = TRACKS[trackIdx], sd = 60 / tr.bpm / 4;
-    while (nextT < ctx.currentTime + 0.14) { playStep(tr, step, nextT); nextT += sd; step++; }
-  }
-
-  function emit() {
-    const tr = TRACKS[trackIdx];
-    $('#ost-play').textContent = playing ? '❚❚ Pausa' : '▶ Play';
-    $('#ost-tag').textContent = playing ? 'sonando' : 'en pausa';
-    $('#ost-title').textContent = tr.title;
-    $('#ost-meta').textContent = `${tr.sub} · ${tr.bpm} BPM`;
-    $('#mini-play').textContent = playing ? '❚❚' : '▶';
-    $('#mini-title').textContent = playing ? tr.title : 'Sin reproducir';
+    current = { idx, sources };
+    updateGains();
+    if (old) {
+      old.sources.forEach(({ src, fade }) => {
+        fade.gain.cancelScheduledValues(ctx.currentTime);
+        fade.gain.setValueAtTime(fade.gain.value, ctx.currentTime);
+        fade.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
+        src.stop(ctx.currentTime + 0.65);
+      });
+    }
+    emit();
+    // precarga el siguiente tema para que el cambio sea instantáneo
+    load((idx + 1) % THEMES.length).catch(() => {});
   }
 
   async function play() {
-    if (!ctx) init();
-    if (ctx.state === 'suspended') await ctx.resume();
-    if (playing) return;
+    ensureCtx();
     playing = true;
-    nextT = ctx.currentTime + 0.06;
-    timer = setInterval(scheduler, 25);
-    emit(); loop();
+    if (ctx.state === 'suspended') await ctx.resume();
+    if (!current || current.idx !== themeIdx) await start(themeIdx);
+    else emit();
+    draw();
   }
-  function pause() {
-    if (!playing) return;
-    playing = false; clearInterval(timer);
-    master.gain.cancelScheduledValues(ctx.currentTime);
-    master.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
-    setTimeout(() => { if (!playing) ctx.suspend(); master.gain.cancelScheduledValues(ctx.currentTime); applyVol(); }, 200);
+  async function pause() {
+    playing = false;
+    if (ctx) await ctx.suspend();
     emit();
   }
-  const toggle = () => {
-    try { localStorage.setItem('music', playing ? 'off' : 'on'); } catch (e) {}
-    playing ? pause() : play();
-  };
+  function toggle() { playing ? pause() : play(); }
 
-  let musicOff = false;
-  try { musicOff = localStorage.getItem('music') === 'off'; } catch (e) {}
-  if (!musicOff) {
-    const kick = (e) => {
-      ['pointerdown', 'keydown'].forEach((t) => removeEventListener(t, kick, true));
-      if (e.target.closest && e.target.closest('#ost-play, #mini-play')) return;
-      play();
-    };
-    ['pointerdown', 'keydown'].forEach((t) => addEventListener(t, kick, true));
+  function select(i, autoplay) {
+    themeIdx = i;
+    emit(playing ? 'cargando' : undefined);
+    if (playing) start(i);
+    else if (autoplay) play();
   }
-  function select(i) {
-    trackIdx = clamp(i, 0, TRACKS.length - 1); step = 0;
-    if (ctx) nextT = ctx.currentTime + 0.06;
-    tracksEl.querySelectorAll('button').forEach((b, j) => b.setAttribute('aria-checked', String(j === trackIdx)));
-    emit();
-  }
-  $('#ost-play').addEventListener('click', toggle);
-  $('#mini-play').addEventListener('click', toggle);
 
+  playBtn.addEventListener('click', toggle);
+  miniBtn.addEventListener('click', toggle);
+
+  /* ---------- visualizador ---------- */
   const viz = $('#ost-viz'), vctx = viz.getContext('2d');
-  const eqc = $('#eq-curve'), ectx = eqc.getContext('2d');
-  let vizVisible = true, data = null;
+  let vizVisible = true, freq = null, wave = null;
   if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { vizVisible = e.isIntersecting; }).observe(viz);
 
-  function loop() {
-    if (!playing) { drawBars(false); return; }
-    if (vizVisible) drawBars(true);
-    requestAnimationFrame(loop);
+  function idle() {
+    const w = viz.width, h = viz.height;
+    vctx.clearRect(0, 0, w, h);
+    vctx.fillStyle = 'rgba(12,238,0,.18)';
+    for (let x = 0; x < w; x += 10) vctx.fillRect(x, h - 3, 6, 2);
   }
-  function drawBars(live) {
-    const W = viz.width, H = viz.height, N = 48, bw = W / N;
-    vctx.clearRect(0, 0, W, H);
-    if (live && analyser) { data = data || new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(data); }
-    vctx.fillStyle = '#4ce228';
-    vctx.globalAlpha = live ? 0.9 : 0.35;
-    for (let i = 0; i < N; i++) {
-      const v = live && data ? data[Math.floor(Math.pow(i / N, 2) * data.length * 0.75)] / 255 : 0;
-      const h = Math.max(2, v * (H - 8));
-      vctx.fillRect(i * bw + 1, H - h, bw - 3, h);
-    }
-    vctx.globalAlpha = 1;
+  idle();
+
+  let raf = 0;
+  function draw() {
+    cancelAnimationFrame(raf);
+    const loop = () => {
+      if (!playing) { idle(); faders.forEach((f) => { f.meter.style.transform = 'scaleX(0)'; }); return; }
+      raf = requestAnimationFrame(loop);
+      if (!vizVisible) return;
+      const w = viz.width, h = viz.height;
+      freq = freq || new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(freq);
+      vctx.clearRect(0, 0, w, h);
+      const bars = 72, bw = w / bars;
+      for (let b = 0; b < bars; b++) {
+        // escala logarítmica: más barras para graves y medios
+        const lo = Math.floor(Math.pow(b / bars, 2) * freq.length * 0.7);
+        const hi = Math.max(lo + 1, Math.floor(Math.pow((b + 1) / bars, 2) * freq.length * 0.7));
+        let m = 0; for (let k = lo; k < hi; k++) m = Math.max(m, freq[k]);
+        const v = m / 255, bh = Math.max(2, v * (h - 8));
+        vctx.fillStyle = v > 0.82 ? '#eaf4e6' : '#0cee00';
+        vctx.globalAlpha = 0.35 + v * 0.65;
+        vctx.fillRect(b * bw + 1, h - bh, bw - 3, bh);
+      }
+      vctx.globalAlpha = 1;
+      wave = wave || new Uint8Array(layerMeters[0].fftSize);
+      layerMeters.forEach((a, i) => {
+        a.getByteTimeDomainData(wave);
+        let peak = 0; for (let k = 0; k < wave.length; k++) peak = Math.max(peak, Math.abs(wave[k] - 128));
+        faders[i].meter.style.transform = `scaleX(${Math.min(1, peak / 70).toFixed(3)})`;
+      });
+    };
+    loop();
   }
 
-  let offline = null;
-  function drawCurve() {
-    const W = eqc.width, H = eqc.height, N = 160;
-    ectx.clearRect(0, 0, W, H);
-    ectx.strokeStyle = 'rgba(76,226,40,.12)'; ectx.lineWidth = 1;
-    [-12, -6, 0, 6, 12].forEach((db) => { const y = H / 2 - (db / 12) * (H / 2 - 8); ectx.beginPath(); ectx.moveTo(0, y); ectx.lineTo(W, y); ectx.stroke(); });
-    const freqs = new Float32Array(N);
-    for (let i = 0; i < N; i++) freqs[i] = 20 * Math.pow(1000, i / (N - 1));
-    const total = new Float32Array(N).fill(1);
-    const src = ctx || (offline = offline || new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100));
-    EQ_FREQS.forEach((f, i) => {
-      const n = src.createBiquadFilter();
-      n.type = EQ_TYPES[i]; n.frequency.value = f; n.Q.value = 1.0; n.gain.value = gains[i];
-      const mag = new Float32Array(N);
-      n.getFrequencyResponse(freqs, mag, new Float32Array(N));
-      for (let k = 0; k < N; k++) total[k] *= mag[k];
-    });
-    ectx.beginPath();
-    for (let k = 0; k < N; k++) {
-      const db = clamp(20 * Math.log10(total[k]), -14, 14);
-      const x = (k / (N - 1)) * W, y = H / 2 - (db / 12) * (H / 2 - 8);
-      k ? ectx.lineTo(x, y) : ectx.moveTo(x, y);
-    }
-    ectx.strokeStyle = '#4ce228'; ectx.lineWidth = 2; ectx.stroke();
-  }
-
-  emit(); drawBars(false); drawCurve();
+  emit();
 })();
