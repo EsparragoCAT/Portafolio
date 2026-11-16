@@ -1,43 +1,48 @@
 <!DOCTYPE html>
-<html lang="es" class="crt-scan">
+<html lang="en" class="crt-scan">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>EsparragoCAT</title>
-  <meta name="description" content="Esparrago diseña juegos, mods y arregla lo que se rompe. A CAT Signature.">
+  <meta name="description" content="Esparrago designs games and mods, and fixes what breaks. A CAT Signature." data-es-content="Esparrago diseña juegos, mods y arregla lo que se rompe. A CAT Signature.">
   <meta name="theme-color" content="#070b07">
   <meta property="og:title" content="EsparragoCAT">
-  <meta property="og:description" content="Diseño juegos, mods y arreglo lo que se rompe. A CAT Signature.">
+  <meta property="og:description" content="I design games and mods, and fix what breaks. A CAT Signature.">
   <meta property="og:image" content="assets/img/portrait-bg.webp">
   <link rel="icon" href="assets/img/favicon.webp" type="image/webp">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@500&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/site.css">
+  <link rel="stylesheet" href="css/site.css?v=2">
   <script>
     document.documentElement.classList.add('js');
     try { var m = localStorage.getItem('crt'); if (m) document.documentElement.className = document.documentElement.className.replace('crt-scan', 'crt-' + m); } catch (e) {}
+    try { if (localStorage.getItem('lang') === 'es') document.documentElement.lang = 'es'; } catch (e) {}
   </script>
 </head>
 <body>
-  <a class="skip" href="#main">Saltar al contenido</a>
+  <a class="skip" href="#main" data-es="Saltar al contenido">Skip to content</a>
   <div id="crt-layers" aria-hidden="true"><div class="l-scan"></div><div class="l-vig"></div></div>
 
   <header class="top">
-    <a class="marca" href="#inicio" aria-label="CAT, ir al inicio"><span class="cat" aria-hidden="true"></span>CAT</a>
-    <nav class="menu" aria-label="Secciones">
+    <a class="marca" href="#inicio" aria-label="CAT, back to top" data-es-aria-label="CAT, ir al inicio"><span class="cat" aria-hidden="true"></span>CAT</a>
+    <nav class="menu" aria-label="Sections" data-es-aria-label="Secciones">
       <a href="#roles">Roles</a>
-      <a href="#proyectos">Proyectos</a>
-      <a href="#laboratorio">Laboratorio</a>
+      <a href="#proyectos" data-es="Proyectos">Projects</a>
+      <a href="#laboratorio" data-es="Laboratorio">Lab</a>
       <a href="#github">GitHub</a>
     </nav>
     <div class="top-der">
       <div class="ahora">
-        <button class="ahora-btn" id="mini-play" aria-label="Reproducir o pausar la música">▶</button>
-        <span id="mini-title" class="ahora-txt">Sin reproducir</span>
+        <button class="ahora-btn" id="mini-play" aria-label="Play or pause the music" data-es-aria-label="Reproducir o pausar la música">▶</button>
+        <span id="mini-title" class="ahora-txt">Not playing</span>
       </div>
-      <div class="seg" role="radiogroup" aria-label="Efecto de monitor CRT" id="crt-select">
+      <div class="seg" role="radiogroup" aria-label="Language" data-es-aria-label="Idioma" id="lang-select">
+        <button role="radio" data-lang="en" lang="en" aria-checked="true" title="English">EN</button>
+        <button role="radio" data-lang="es" lang="es" aria-checked="false" title="Español">ES</button>
+      </div>
+      <div class="seg" role="radiogroup" aria-label="CRT monitor effect" data-es-aria-label="Efecto de monitor CRT" id="crt-select">
         <button role="radio" data-mode="off" aria-checked="false">OFF</button>
         <button role="radio" data-mode="scan" aria-checked="true">SCAN</button>
         <button role="radio" data-mode="full" aria-checked="false">FULL</button>
@@ -50,9 +55,9 @@
     <!-- portada -->
     <section class="hero" id="inicio" aria-labelledby="hero-h">
       <div class="hero-txt">
-        <p class="eyebrow"><span class="led" aria-hidden="true"></span>Esparrago · Manager, Compositor y Diseñador de Elysis Creative</p>
-        <h1 id="hero-h">Diseño juegos, mods y <span>arreglo lo que se rompe.</span></h1>
-        <p class="lead">Invento los universos donde pasan las cosas y, cuando algo falla, me quedo hasta encontrar por qué. Me importa más que un sistema <em>funcione bien</em> a que se vea complejo.</p>
+        <p class="eyebrow"><span class="led" aria-hidden="true"></span><span data-es="Esparrago · Manager, Compositor y Diseñador de Elysis Creative">Esparrago · Manager, Composer &amp; Designer at Elysis Creative</span></p>
+        <h1 id="hero-h" data-es="Diseño juegos, mods y &lt;span&gt;arreglo lo que se rompe.&lt;/span&gt;">I design games and mods, and <span>fix what breaks.</span></h1>
+        <p class="lead" data-es="Invento los universos donde pasan las cosas y, cuando algo falla, me quedo hasta encontrar por qué. Me importa más que un sistema &lt;em&gt;funcione bien&lt;/em&gt; a que se vea complejo.">I invent the worlds where things happen and, when something fails, I stay until I find out why. I care more about a system <em>working well</em> than about it looking complex.</p>
         <ul class="acciones">
           <li><a class="btn primario" href="https://www.youtube.com/@Esparragoh" rel="me">YouTube<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M0 0H14V8L7 14 0 8Z"/></svg></a></li>
           <li><a class="btn" href="https://soundcloud.com/esparragocat" rel="me">SoundCloud</a></li>
@@ -60,39 +65,39 @@
         </ul>
       </div>
       <figure class="retrato">
-        <img src="assets/img/portrait-bg.webp" alt="Orion, mi sona: un chico de pelo oscuro con dos antenas, en verde" width="640" height="640" fetchpriority="high">
+        <img src="assets/img/portrait-bg.webp" alt="Orion, my sona: a dark-haired boy with two antennae, in green" data-es-alt="Orion, mi sona: un chico de pelo oscuro con dos antenas, en verde" width="640" height="640" fetchpriority="high">
         <span class="cat" aria-hidden="true"></span>
-        <figcaption>ORION · sona de Esparrago</figcaption>
+        <figcaption data-es="ORION · sona de Esparrago">ORION · Esparrago's sona</figcaption>
       </figure>
       <dl class="datos">
         <div><dt>Roles</dt><dd>06</dd></div>
-        <div><dt>Proyectos</dt><dd>07</dd></div>
-        <div><dt>Repos públicos</dt><dd id="repo-count">··</dd></div>
-        <div><dt>Equipo</dt><dd>Elysis</dd></div>
+        <div><dt data-es="Proyectos">Projects</dt><dd>07</dd></div>
+        <div><dt data-es="Repos públicos">Public repos</dt><dd id="repo-count">··</dd></div>
+        <div><dt data-es="Equipo">Team</dt><dd>Elysis</dd></div>
       </dl>
     </section>
 
     <!-- cinta -->
     <div class="cinta" aria-hidden="true">
       <div class="cinta-track">
-        <span>Game design</span><span>Level design</span><span>Storyteller</span><span>TI Auditor</span><span>Manager</span><span>Debugger</span><span>Compositor</span><span>A CAT Signature</span>
-        <span>Game design</span><span>Level design</span><span>Storyteller</span><span>TI Auditor</span><span>Manager</span><span>Debugger</span><span>Compositor</span><span>A CAT Signature</span>
+        <span>Game design</span><span>Level design</span><span>Storyteller</span><span data-es="TI Auditor">IT Auditor</span><span>Manager</span><span>Debugger</span><span data-es="Compositor">Composer</span><span>A CAT Signature</span>
+        <span>Game design</span><span>Level design</span><span>Storyteller</span><span data-es="TI Auditor">IT Auditor</span><span>Manager</span><span>Debugger</span><span data-es="Compositor">Composer</span><span>A CAT Signature</span>
       </div>
     </div>
 
     <!-- roles -->
     <section class="bloque reveal" id="roles" aria-labelledby="roles-h">
       <div class="bloque-cab">
-        <p class="eyebrow">Qué hago</p>
-        <h2 id="roles-h">Seis oficios, una firma</h2>
+        <p class="eyebrow" data-es="Qué hago">What I do</p>
+        <h2 id="roles-h" data-es="Seis oficios, una firma">Six crafts, one signature</h2>
       </div>
       <ul class="roles">
-        <li><span class="placa">01</span><h3>Game y level design</h3><p>Mecánicas, progresión, balance de combate y economías.</p></li>
-        <li><span class="placa">02</span><h3>Storyteller</h3><p>Lore, personajes, worldbuilding y ramas narrativas complejas.</p></li>
-        <li><span class="placa">03</span><h3>TI Auditor</h3><p>Encontrar dónde se rompen las cosas o un programa antes que la gente.</p></li>
-        <li><span class="placa">04</span><h3>Manager</h3><p>Priorizar, recortar alcance y que el proyecto salga bien.</p></li>
-        <li><span class="placa">05</span><h3>Debugger</h3><p>Mods en Java, apps de escritorio y plugins.</p></li>
-        <li><span class="placa">06</span><h3>Compositor</h3><p>OST y cantante amateur.</p></li>
+        <li><span class="placa">01</span><h3 data-es="Game y level design">Game &amp; level design</h3><p data-es="Mecánicas, progresión, balance de combate y economías.">Mechanics, progression, combat balance and economies.</p></li>
+        <li><span class="placa">02</span><h3>Storyteller</h3><p data-es="Lore, personajes, worldbuilding y ramas narrativas complejas.">Lore, characters, worldbuilding and complex branching narratives.</p></li>
+        <li><span class="placa">03</span><h3 data-es="TI Auditor">IT Auditor</h3><p data-es="Encontrar dónde se rompen las cosas o un programa antes que la gente.">Finding where things, or a program, break before people do.</p></li>
+        <li><span class="placa">04</span><h3>Manager</h3><p data-es="Priorizar, recortar alcance y que el proyecto salga bien.">Prioritizing, cutting scope and making sure the project ships right.</p></li>
+        <li><span class="placa">05</span><h3>Debugger</h3><p data-es="Mods en Java, apps de escritorio y plugins.">Java mods, desktop apps and plugins.</p></li>
+        <li><span class="placa">06</span><h3 data-es="Compositor">Composer</h3><p data-es="OST y cantante amateur.">Soundtracks, plus amateur singer.</p></li>
       </ul>
     </section>
 
@@ -100,56 +105,56 @@
     <section class="bloque reveal" id="proyectos" aria-labelledby="proy-h">
       <div class="bloque-cab">
         <p class="eyebrow">A CAT Signature</p>
-        <h2 id="proy-h">Proyectos</h2>
+        <h2 id="proy-h" data-es="Proyectos">Projects</h2>
       </div>
       <div class="grupo">
-        <h3 class="grupo-t">Mods de Minecraft <span>05</span></h3>
+        <h3 class="grupo-t" data-es="Mods de Minecraft &lt;span&gt;05&lt;/span&gt;">Minecraft mods <span>05</span></h3>
         <ol class="proyectos">
           <li>
             <span class="p-num">01</span>
             <h3><a href="https://github.com/EsparragoCAT/CopyCAT">CopyCAT</a></h3>
-            <p>Cambio de skin y cosméticos sin salir del juego. Si el servidor no lo tiene, no rompe nada.</p>
+            <p data-es="Cambio de skin y cosméticos sin salir del juego. Si el servidor no lo tiene, no rompe nada.">Change skins and cosmetics without leaving the game. If the server doesn't have it, nothing breaks.</p>
             <span class="p-tec">NeoForge · 1.21.1</span>
           </li>
           <li>
             <span class="p-num">02</span>
             <h3><a href="https://github.com/EsparragoCAT/CATBox">CATBox</a></h3>
-            <p>Cuadros de diálogo estilo retro para mapas, eventos y series.</p>
+            <p data-es="Cuadros de diálogo estilo retro para mapas, eventos y series.">Retro-style dialogue boxes for maps, events and series.</p>
             <span class="p-tec">NeoForge · 1.21.1 · MIT</span>
           </li>
           <li>
             <span class="p-num">03</span>
             <h3>CATStage</h3>
-            <p>Director de conciertos: artistas con skin y baile, timeline sincronizada con el audio y modelos propios.</p>
+            <p data-es="Director de conciertos: artistas con skin y baile, timeline sincronizada con el audio y modelos propios.">Concert director: artists with skins and dances, a timeline synced to the audio, and custom models.</p>
             <span class="p-tec">NeoForge · 1.21.11</span>
           </li>
           <li>
             <span class="p-num">04</span>
             <h3>ShowCAT</h3>
-            <p>El evento transmitido como si fuera TV: cámaras, sala de control y entrevistas con micrófono.</p>
+            <p data-es="El evento transmitido como si fuera TV: cámaras, sala de control y entrevistas con micrófono.">Your event broadcast like live TV: cameras, a control room and interviews on the mic.</p>
             <span class="p-tec">NeoForge · 1.21.11</span>
           </li>
           <li>
             <span class="p-num">05</span>
             <h3>CATlendar</h3>
-            <p>Calendarios personalizables para servidores y series de rol.</p>
+            <p data-es="Calendarios personalizables para servidores y series de rol.">Customizable calendars for servers and roleplay series.</p>
             <span class="p-tec">Fabric + NeoForge · 1.21.1</span>
           </li>
         </ol>
       </div>
       <div class="grupo">
-        <h3 class="grupo-t">Apps y herramientas <span>02</span></h3>
+        <h3 class="grupo-t" data-es="Apps y herramientas &lt;span&gt;02&lt;/span&gt;">Apps &amp; tools <span>02</span></h3>
         <ol class="proyectos">
           <li>
             <span class="p-num">06</span>
             <h3>Sparrafy</h3>
-            <p>Mi cliente de música para escritorio. Lo quería liviano y a mi gusto porque Spotify pesa demasiado.</p>
+            <p data-es="Mi cliente de música para escritorio. Lo quería liviano y a mi gusto porque Spotify pesa demasiado.">My desktop music client. I wanted it lightweight and my way, because Spotify is too heavy.</p>
             <span class="p-tec">Rust · Tauri v2</span>
           </li>
           <li>
             <span class="p-num">07</span>
             <h3>CATStudio</h3>
-            <p>Studio de música manual y algorítmica hecha a mi gusto.</p>
+            <p data-es="Studio de música manual y algorítmica hecha a mi gusto.">A music studio for manual and algorithmic composing, built my way.</p>
             <span class="p-tec">React · TypeScript · Tone.js</span>
           </li>
         </ol>
@@ -159,21 +164,21 @@
     <!-- laboratorio -->
     <section class="bloque reveal" id="laboratorio" aria-labelledby="lab-h">
       <div class="bloque-cab">
-        <p class="eyebrow">Laboratorio</p>
-        <h2 id="lab-h">Cosas que se pueden tocar</h2>
+        <p class="eyebrow" data-es="Laboratorio">Lab</p>
+        <h2 id="lab-h" data-es="Cosas que se pueden tocar">Things you can play with</h2>
       </div>
 
       <div class="bento">
         <!-- música adaptativa -->
         <article class="caja caja-musica" id="musica" aria-labelledby="ost-h">
           <div class="caja-cab">
-            <h3 id="ost-h">Música adaptativa · Project: Firefly</h3>
-            <span class="chip" id="ost-tag">en pausa</span>
+            <h3 id="ost-h" data-es="Música adaptativa · Project: Firefly">Adaptive music · Project: Firefly</h3>
+            <span class="chip" id="ost-tag">paused</span>
           </div>
-          <p class="desc">Los temas que hice para Firefly, el shooter que vive dentro de la serie. Cada uno es un loop en tres capas y el mod sube o baja cada capa según lo que pasa en la partida. Acá la mezcla la hacés vos.</p>
+          <p class="desc" data-es="Los temas que hice para Firefly, el shooter que vive dentro de la serie. Cada uno es un loop en tres capas y el mod sube o baja cada capa según lo que pasa en la partida. Acá la mezcla la hacés vos.">The tracks I made for Firefly, the shooter that lives inside the series. Each one is a three-layer loop, and the mod raises or lowers each layer depending on what's happening in the match. Here, you do the mixing.</p>
 
           <div class="mezcla">
-            <ol class="temas" id="ost-temas" aria-label="Temas"></ol>
+            <ol class="temas" id="ost-temas" aria-label="Tracks" data-es-aria-label="Temas"></ol>
 
             <div class="consola">
               <div class="ahora-suena">
@@ -185,16 +190,16 @@
                 <button class="btn primario play" id="ost-play" type="button">▶ Play</button>
               </div>
 
-              <canvas class="viz" id="ost-viz" width="900" height="160" aria-label="Analizador de espectro"></canvas>
+              <canvas class="viz" id="ost-viz" width="900" height="160" aria-label="Spectrum analyzer" data-es-aria-label="Analizador de espectro"></canvas>
 
               <div class="escenas">
-                <span class="nota">Escena del juego</span>
-                <div class="seg" role="radiogroup" aria-label="Escena del juego" id="ost-escenas"></div>
+                <span class="nota" data-es="Escena del juego">Game scene</span>
+                <div class="seg" role="radiogroup" aria-label="Game scene" data-es-aria-label="Escena del juego" id="ost-escenas"></div>
               </div>
 
               <div class="capas" id="ost-capas"></div>
 
-              <label class="ctl volumen"><span>Volumen general</span><output></output><input type="range" id="ost-vol" min="0" max="100" step="1" value="70"></label>
+              <label class="ctl volumen"><span data-es="Volumen general">Master volume</span><output></output><input type="range" id="ost-vol" min="0" max="100" step="1" value="70"></label>
             </div>
           </div>
         </article>
@@ -206,13 +211,13 @@
     <section class="bloque reveal" id="github" aria-labelledby="gh-h">
       <div class="bloque-cab fila">
         <div>
-          <p class="eyebrow">Código</p>
-          <h2 id="gh-h">Últimos en GitHub</h2>
+          <p class="eyebrow" data-es="Código">Code</p>
+          <h2 id="gh-h" data-es="Últimos en GitHub">Latest on GitHub</h2>
         </div>
-        <a class="btn" href="https://github.com/EsparragoCAT">Ver perfil</a>
+        <a class="btn" href="https://github.com/EsparragoCAT" data-es="Ver perfil">View profile</a>
       </div>
       <ul class="repos" id="repos" aria-live="polite">
-        <li class="nota">Cargando repositorios…</li>
+        <li class="nota">Loading repositories…</li>
       </ul>
     </section>
   </main>
@@ -221,12 +226,12 @@
     <span class="cat" aria-hidden="true"></span>
     <p class="firma">A <span>CAT</span> Signature</p>
     <div class="pie-barra">
-      <span><b>EsparragoCAT</b> · Manager, Compositor y Diseñador de Elysis Creative</span>
+      <span><b>EsparragoCAT</b> · <span data-es="Manager, Compositor y Diseñador de Elysis Creative">Manager, Composer &amp; Designer at Elysis Creative</span></span>
       <span class="pie-links"><a href="https://www.youtube.com/@Esparragoh">YouTube</a><a href="https://soundcloud.com/esparragocat">SoundCloud</a><a href="https://github.com/EsparragoCAT">GitHub</a></span>
     </div>
   </footer>
 
-  <script src="js/site.js" defer></script>
-  <script src="js/audio.js" defer></script>
+  <script src="js/site.js?v=2" defer></script>
+  <script src="js/audio.js?v=2" defer></script>
 </body>
 </html>

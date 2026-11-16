@@ -296,6 +296,10 @@ canvas.viz { width: 100%; height: 160px; display: block; background: #040704; }
 @media (max-width: 600px) {
   :root { --top-h: 58px; --gutter: max(16px, env(safe-area-inset-left, 0px)); --gutter-r: max(16px, env(safe-area-inset-right, 0px)); }
   .ahora-txt { display: none; }
+  .top { gap: 10px; }
+  .top-der { gap: 8px; }
+  .top .seg button { padding: 0 7px; }
+  .marca { font-size: 16px; gap: 8px; }
   .roles { grid-template-columns: minmax(0, 1fr); }
   .proyectos li { grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 28px 0; }
   .proyectos p { grid-column: auto; }

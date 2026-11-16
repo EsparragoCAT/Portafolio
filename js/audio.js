@@ -3,29 +3,35 @@
    Igual que MusicDirector en el mod: no se cambia de pista, se sube y baja cada capa. */
 (function () {
   const $ = (s) => document.querySelector(s);
+  // Textos en [inglés, español]; L() devuelve el del idioma actual.
+  const L = (pair) => (Array.isArray(pair) ? I18N.t(pair[0], pair[1]) : pair);
 
   const THEMES = [
-    { id: 'lobby', name: 'Lobby', moment: 'Espera y cuenta regresiva', style: 'Ambient tenso', bpm: 61 },
-    { id: 'todos', name: 'Todos contra todos', moment: 'Modo libre', style: 'Darksynth', bpm: 123 },
-    { id: 'pvp', name: 'PVP', moment: 'PVP puro', style: 'Industrial', bpm: 127 },
-    { id: 'pve', name: 'Oleadas', moment: 'PVE contra drones', style: 'Drum and bass oscuro', bpm: 174 },
-    { id: 'hardpoint', name: 'Hardpoint', moment: 'Control de zona', style: 'Midtempo cyber', bpm: 121 },
-    { id: 'bandera', name: 'Bandera', moment: 'Captura de bandera', style: 'Synth 80', bpm: 110 },
-    { id: 'boss', name: 'Jefe', moment: 'Pelea contra el jefe', style: 'Épico con coro', bpm: 108 },
-    { id: 'results', name: 'Ganadores', moment: 'Pantalla de resultados', style: 'Cine híbrido', bpm: 114 },
+    { id: 'lobby', name: 'Lobby', moment: ['Waiting and countdown', 'Espera y cuenta regresiva'], style: ['Tense ambient', 'Ambient tenso'], bpm: 61 },
+    { id: 'todos', name: ['Free for all', 'Todos contra todos'], moment: ['Free mode', 'Modo libre'], style: 'Darksynth', bpm: 123 },
+    { id: 'pvp', name: 'PVP', moment: ['Pure PVP', 'PVP puro'], style: 'Industrial', bpm: 127 },
+    { id: 'pve', name: ['Waves', 'Oleadas'], moment: ['PVE against drones', 'PVE contra drones'], style: ['Dark drum and bass', 'Drum and bass oscuro'], bpm: 174 },
+    { id: 'hardpoint', name: 'Hardpoint', moment: ['Zone control', 'Control de zona'], style: 'Midtempo cyber', bpm: 121 },
+    { id: 'bandera', name: ['Flag', 'Bandera'], moment: ['Capture the flag', 'Captura de bandera'], style: ['80s synth', 'Synth 80'], bpm: 110 },
+    { id: 'boss', name: ['Boss', 'Jefe'], moment: ['Boss fight', 'Pelea contra el jefe'], style: ['Epic with choir', 'Épico con coro'], bpm: 108 },
+    { id: 'results', name: ['Winners', 'Ganadores'], moment: ['Results screen', 'Pantalla de resultados'], style: ['Hybrid cinematic', 'Cine híbrido'], bpm: 114 },
   ];
   const LAYERS = [
-    { id: 'base', name: 'Base', what: 'Acordes y arpegio' },
-    { id: 'rhythm', name: 'Ritmo', what: 'Batería y bajo' },
-    { id: 'lead', name: 'Lead', what: 'Melodía' },
+    { id: 'base', name: 'Base', what: ['Chords and arpeggio', 'Acordes y arpegio'] },
+    { id: 'rhythm', name: ['Rhythm', 'Ritmo'], what: ['Drums and bass', 'Batería y bajo'] },
+    { id: 'lead', name: 'Lead', what: ['Melody', 'Melodía'] },
   ];
   // Los mismos niveles que usa MusicDirector (base, ritmo, lead).
   const SCENES = [
-    { id: 'calma', name: 'Calma', levels: [0.9, 0.6, 0.3] },
-    { id: 'pelea', name: 'Pelea', levels: [0.9, 1, 0.9] },
-    { id: 'caido', name: 'Caído', levels: [0.45, 0.3, 0.15] },
-    { id: 'todo', name: 'Todo', levels: [1, 1, 1] },
+    { id: 'calma', name: ['Calm', 'Calma'], levels: [0.9, 0.6, 0.3] },
+    { id: 'pelea', name: ['Fight', 'Pelea'], levels: [0.9, 1, 0.9] },
+    { id: 'caido', name: ['Down', 'Caído'], levels: [0.45, 0.3, 0.15] },
+    { id: 'todo', name: ['All', 'Todo'], levels: [1, 1, 1] },
   ];
+  const STATES = {
+    playing: ['playing', 'sonando'], paused: ['paused', 'en pausa'],
+    loading: ['loading', 'cargando'], error: ["couldn't load", 'no se pudo cargar'],
+  };
 
   const FORMAT = (() => {
     const a = document.createElement('audio');
@@ -47,7 +53,7 @@
     const li = document.createElement('li');
     li.innerHTML = `<button type="button" class="tema" aria-pressed="${i === 0}">
         <span class="tema-n">${String(i + 1).padStart(2, '0')}</span>
-        <span class="tema-txt"><b>${t.name}</b><small>${t.style}</small></span>
+        <span class="tema-txt"><b></b><small></small></span>
         <span class="tema-bpm">${t.bpm}</span>
       </button>`;
     li.querySelector('button').addEventListener('click', () => select(i, true));
@@ -57,7 +63,7 @@
   SCENES.forEach((sc, i) => {
     const b = document.createElement('button');
     b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.i = i;
-    b.setAttribute('aria-checked', String(i === 0)); b.textContent = sc.name;
+    b.setAttribute('aria-checked', String(i === 0));
     b.addEventListener('click', () => applyScene(i));
     escenasEl.append(b);
   });
@@ -66,9 +72,9 @@
     const row = document.createElement('div');
     row.className = 'capa';
     row.innerHTML = `
-      <button type="button" class="capa-mute" aria-pressed="true" aria-label="Silenciar ${ly.name}">${ly.name}</button>
+      <button type="button" class="capa-mute" aria-pressed="true"></button>
       <div class="capa-ctl">
-        <label class="nota" for="capa-${ly.id}">${ly.what}</label>
+        <label class="nota" for="capa-${ly.id}"></label>
         <input type="range" id="capa-${ly.id}" min="0" max="100" step="1" value="${Math.round(levels[i] * 100)}">
         <span class="capa-meter" aria-hidden="true"><i></i></span>
       </div>
@@ -82,8 +88,26 @@
       updateGains();
     });
     capasEl.append(row);
-    return { input, out, meter: row.querySelector('.capa-meter i') };
+    return { input, out, mute, label: row.querySelector('label'), meter: row.querySelector('.capa-meter i') };
   });
+
+  // Pone los nombres en el idioma actual (al arrancar y cada vez que se cambia).
+  function labels() {
+    temasEl.querySelectorAll('.tema').forEach((b, i) => {
+      b.querySelector('b').textContent = L(THEMES[i].name);
+      b.querySelector('small').textContent = L(THEMES[i].style);
+    });
+    escenasEl.querySelectorAll('button').forEach((b, i) => { b.textContent = L(SCENES[i].name); });
+    faders.forEach((f, i) => {
+      const name = L(LAYERS[i].name);
+      f.mute.textContent = name;
+      f.mute.setAttribute('aria-label', I18N.t(`Mute ${name}`, `Silenciar ${name}`));
+      f.label.textContent = L(LAYERS[i].what);
+    });
+  }
+  labels();
+  let lastState;
+  document.addEventListener('langchange', () => { labels(); emit(lastState); });
 
   const vol = $('#ost-vol'), volOut = vol.parentElement.querySelector('output');
   const showVol = () => { volOut.textContent = vol.value + '%'; };
@@ -102,15 +126,16 @@
 
   function emit(state) {
     const t = THEMES[themeIdx];
-    $('#ost-title').textContent = t.name;
-    $('#ost-momento').textContent = t.moment;
-    $('#ost-meta').textContent = `${t.style} · ${t.bpm} BPM · 3 capas en loop`;
+    lastState = state;
+    const name = L(t.name);
+    $('#ost-title').textContent = name;
+    $('#ost-momento').textContent = L(t.moment);
+    $('#ost-meta').textContent = `${L(t.style)} · ${t.bpm} BPM · ${I18N.t('3 looping layers', '3 capas en loop')}`;
     temasEl.querySelectorAll('.tema').forEach((b, j) => b.setAttribute('aria-pressed', String(j === themeIdx)));
-    const label = state || (playing ? 'sonando' : 'en pausa');
-    tag.textContent = label;
-    playBtn.textContent = playing ? '❚❚ Pausa' : '▶ Play';
+    tag.textContent = L(STATES[state || (playing ? 'playing' : 'paused')]);
+    playBtn.textContent = playing ? I18N.t('❚❚ Pause', '❚❚ Pausa') : '▶ Play';
     miniBtn.textContent = playing ? '❚❚' : '▶';
-    miniTitle.textContent = playing ? `Firefly · ${t.name}` : 'Sin reproducir';
+    miniTitle.textContent = playing ? `Firefly · ${name}` : I18N.t('Not playing', 'Sin reproducir');
   }
 
   /* ---------- audio ---------- */
@@ -149,9 +174,9 @@
   }
 
   async function start(idx) {
-    emit('cargando');
+    emit('loading');
     let bufs;
-    try { bufs = await load(idx); } catch (e) { playing = false; emit('no se pudo cargar'); return; }
+    try { bufs = await load(idx); } catch (e) { playing = false; emit('error'); return; }
     if (!playing || idx !== themeIdx) return; // cambiaron de idea mientras cargaba
     const old = current;
     const when = ctx.currentTime + 0.06;
@@ -196,7 +221,7 @@
 
   function select(i, autoplay) {
     themeIdx = i;
-    emit(playing ? 'cargando' : undefined);
+    emit(playing ? 'loading' : undefined);
     if (playing) start(i);
     else if (autoplay) play();
   }
