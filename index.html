@@ -28,14 +28,28 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@500&family=VT323&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/site.css?v=4">
+  <link rel="stylesheet" href="css/site.css?v=5">
   <script>
     document.documentElement.classList.add('js');
     try { var m = localStorage.getItem('crt'); if (m) document.documentElement.className = document.documentElement.className.replace('crt-scan', 'crt-' + m); } catch (e) {}
     try { if (localStorage.getItem('lang') === 'es') document.documentElement.lang = 'es'; } catch (e) {}
+    // intro: una vez por visita y nunca con movimiento reducido
+    try { if (!sessionStorage.getItem('intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) { document.documentElement.classList.add('intro'); setTimeout(function () { document.documentElement.classList.remove('intro'); }, 6000); } } catch (e) {}
   </script>
 </head>
 <body>
+  <div id="intro">
+    <div class="in-pantalla" aria-hidden="true">
+      <span class="cat in-logo"></span>
+      <ol class="in-boot">
+        <li><span><b>C</b>ode</span><i></i></li>
+        <li><span><b>A</b>rt</span><i></i></li>
+        <li><span><b>T</b>echnology</span><i></i></li>
+      </ol>
+      <p class="in-firma">A <span>CAT</span> Signature</p>
+    </div>
+    <button class="in-saltar" type="button" data-es="Saltar intro">Skip intro</button>
+  </div>
   <a class="skip" href="#main" data-es="Saltar al contenido">Skip to content</a>
   <div id="crt-layers" aria-hidden="true"><div class="l-scan"></div><div class="l-vig"></div></div>
 
@@ -251,7 +265,7 @@
     </div>
   </footer>
 
-  <script src="js/site.js?v=4" defer></script>
-  <script src="js/audio.js?v=4" defer></script>
+  <script src="js/site.js?v=5" defer></script>
+  <script src="js/audio.js?v=5" defer></script>
 </body>
 </html>

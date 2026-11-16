@@ -43,6 +43,25 @@ window.I18N = (function () {
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const t = I18N.t;
 
+  /* ---- intro: encendido de CRT, se apaga solo a los 3,1 s o con "Saltar" / Esc ---- */
+  const intro = $('#intro');
+  if (root.classList.contains('intro') && intro) {
+    let done = false;
+    const end = () => {
+      if (done) return;
+      done = true;
+      try { sessionStorage.setItem('intro', '1'); } catch (e) {}
+      intro.classList.add('in-fin');
+      setTimeout(() => { root.classList.remove('intro'); intro.remove(); }, 520);
+      document.removeEventListener('keydown', onKey);
+    };
+    const onKey = (e) => { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') end(); };
+    intro.querySelector('.in-saltar').addEventListener('click', end);
+    intro.addEventListener('click', end);
+    document.addEventListener('keydown', onKey);
+    setTimeout(end, 3100);
+  } else if (intro) intro.remove();
+
   /* ---- modos de pantalla: OFF / SCAN / FULL ---- */
   const seg = $('#crt-select');
   const current = () => (root.className.match(/crt-(off|scan|full)/) || [, 'scan'])[1];
