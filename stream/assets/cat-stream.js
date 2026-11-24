@@ -199,6 +199,61 @@ window.CAT = (function () {
   }
   function preload(names) { if (opt('sonido', '1') !== '0') names.forEach((n) => { const s = opt('snd_' + n, 'assets/sonidos/' + n + '.ogg'); if (!cache[s]) { cache[s] = new Audio(s); cache[s].preload = 'auto'; } }); }
 
+  /* ---------- voz (TTS en español) ----------
+     ?tts=0 la apaga · ?ttsmotor=auto|navegador|google · ?ttsvol=100 · ?ttsvel=1 · ?ttsvoz=Sabina
+     ?ttstipos=follow,sub,gift,giftbomb,bits,raid · ?ttsmax=180 (letras máximas del mensaje del espectador) */
+  const ttsOn = () => opt('tts', '1') !== '0';
+  const ttsTypes = () => new Set(opt('ttstipos', 'follow,sub,gift,giftbomb,bits,raid').split(','));
+  function cleanText(s) {
+    return String(s || '')
+      .replace(/https?:\/\/\S+|www\.\S+/gi, 'un link')
+      .replace(/(.)\1{3,}/g, '$1$1$1')            // aaaaaa -> aaa
+      .replace(/\b(\w{1,4})(\1){3,}/gi, '$1$1')     // jajajajaja -> jaja
+      .replace(/[<>{}[\]\\|^~`*_#]/g, ' ')
+      .replace(/\s+/g, ' ').trim();
+  }
+  function spanishVoice() {
+    if (!('speechSynthesis' in window)) return null;
+    const vs = speechSynthesis.getVoices().filter((v) => /^es(-|_|$)/i.test(v.lang));
+    if (!vs.length) return null;
+    const want = opt('ttsvoz', '').toLowerCase();
+    return (want && vs.find((v) => v.name.toLowerCase().includes(want))) ||
+      vs.find((v) => /es-(ar|mx|us|419)/i.test(v.lang)) || vs[0];
+  }
+  if ('speechSynthesis' in window) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); }
+  function sayBrowser(text, voice) {
+    return new Promise((res) => {
+      const u = new SpeechSynthesisUtterance(text);
+      u.voice = voice; u.lang = voice.lang; u.rate = +opt('ttsvel', 1); u.volume = Math.min(1, +opt('ttsvol', 100) / 100);
+      const done = () => res(); u.onend = done; u.onerror = done;
+      speechSynthesis.speak(u);
+      setTimeout(done, 30000);
+    });
+  }
+  async function sayGoogle(text) {
+    // el servicio acepta hasta ~200 letras por pedido: se parte por frases
+    const parts = text.match(/[^.!?¡¿,;]{1,180}[.!?,;]?/g) || [text];
+    for (const part of parts) {
+      await new Promise((res) => {
+        const a = new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&ttsspeed=' + (+opt('ttsvel', 1) < 0.9 ? '0.24' : '1') + '&q=' + encodeURIComponent(part.trim()));
+        a.volume = Math.min(1, +opt('ttsvol', 100) / 100);
+        a.playbackRate = Math.max(0.8, Math.min(1.5, +opt('ttsvel', 1)));
+        a.onended = res; a.onerror = res; a.play().catch(res);
+        setTimeout(res, 20000);
+      });
+    }
+  }
+  // dice el texto y avisa cuando termina (para que la alerta no se cierre a mitad de frase)
+  function say(text, type) {
+    if (!ttsOn() || (type && !ttsTypes().has(type))) return Promise.resolve();
+    text = cleanText(text); if (!text) return Promise.resolve();
+    const motor = opt('ttsmotor', 'auto'), voice = motor !== 'google' ? spanishVoice() : null;
+    if (voice && motor !== 'google') return sayBrowser(text, voice);
+    if (motor === 'navegador') return Promise.resolve();
+    return sayGoogle(text);
+  }
+  const userMsg = (s) => { const m = cleanText(s); const max = +opt('ttsmax', 180); return m.length > max ? m.slice(0, max) + '…' : m; };
+
   /* ---------- escala ----------
      El contenido se arma como si la fuente fuera del tamaño de diseño y después se achica o agranda para entrar.
      <body data-base="1920"> escala sola según el ancho de la fuente; si no, ?zoom=0.667 (lo pone el panel para 720p). */
@@ -226,5 +281,5 @@ window.CAT = (function () {
     if (opt('cid') && opt('token')) connectFollows(opt('cid'), opt('token'));
   }
 
-  return { opt, on, emit, esc, start, demo, demoChat, renderText, blip, play, preload, _parse: (l) => { handle(parseLine(l)); } };
+  return { opt, on, emit, esc, start, demo, demoChat, renderText, blip, play, preload, say, userMsg, spanishVoice, _parse: (l) => { handle(parseLine(l)); } };
 })();

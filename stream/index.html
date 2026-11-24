@@ -85,7 +85,36 @@
   </section>
 
   <section class="caja">
-    <h2><small>02</small>Follows (opcional)</h2>
+    <h2><small>02</small>Voz (TTS en español)</h2>
+    <p>Cuando llega una alerta, una voz la anuncia: agradece follows, regalos y raids, y lee el mensaje de los subs y los bits.</p>
+    <div class="campos">
+      <label class="check"><input type="checkbox" id="tts"> Voz activada</label>
+      <label class="campo"><span>Motor</span><select id="ttsmotor">
+        <option value="auto">Automático (Windows si hay voz en español, si no Google)</option>
+        <option value="navegador">Solo voces de Windows</option>
+        <option value="google">Solo Google</option></select></label>
+      <label class="campo rango"><span>Volumen de la voz: <output id="ttsvol-o"></output></span><input type="range" id="ttsvol" min="0" max="100" step="5"></label>
+      <label class="campo rango"><span>Velocidad: <output id="ttsvel-o"></output></span><input type="range" id="ttsvel" min="0.7" max="1.5" step="0.05"></label>
+      <label class="campo"><span>Letras máximas del mensaje</span><input type="number" id="ttsmax" min="20" max="300"></label>
+    </div>
+    <div class="pruebas" id="ttstipos">
+      <span>Qué alertas hablan</span>
+      <label class="check"><input type="checkbox" value="follow"> Follow</label>
+      <label class="check"><input type="checkbox" value="sub"> Sub</label>
+      <label class="check"><input type="checkbox" value="gift"> Regalo</label>
+      <label class="check"><input type="checkbox" value="giftbomb"> Lluvia</label>
+      <label class="check"><input type="checkbox" value="bits"> Bits</label>
+      <label class="check"><input type="checkbox" value="raid"> Raid</label>
+    </div>
+    <div class="campos">
+      <label class="campo"><span>Texto de prueba</span><input type="text" id="ttstexto" value="Orion se suscribió por seis meses. ¡Arriba el gato!"></label>
+    </div>
+    <div class="pruebas"><button class="btn pri" id="ttsprobar" type="button">Probar voz</button><span class="estado" id="tts-estado"></span></div>
+    <p>Las voces de Windows dependen de lo que tenga instalado tu PC (Configuración → Hora e idioma → Voz). Con Google, el texto del mensaje se manda a Google para generar el audio. Probá las dos en Meld con <code>!test sub</code> y quedate con la que suene.</p>
+  </section>
+
+  <section class="caja">
+    <h2><small>03</small>Follows (opcional)</h2>
     <p>Twitch no avisa los follows por el chat. Para mostrarlos hay que conectar tu cuenta una vez:</p>
     <ol>
       <li>Entrá a <a href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">dev.twitch.tv/console/apps</a> con tu cuenta y tocá <b>Registrar tu aplicación</b>.</li>
@@ -105,7 +134,7 @@
   </section>
 
   <section class="caja">
-    <h2><small>03</small>Fuentes para Meld</h2>
+    <h2><small>04</small>Fuentes para Meld</h2>
     <p>En Meld Studio: agregá una capa de tipo <b>navegador / Browser</b> a la escena, pegá la URL y poné el tamaño indicado (ya está calculado para la resolución que elegiste arriba). El marco de cámara va del mismo tamaño que tu cámara: si la tuya es otra medida, usá esa. El chat podés hacerlo más ancho o más alto en Meld: la letra crece con el ancho, y además tiene su propio control de tamaño. Cualquier cambio de opciones acá cambia la URL: copiala de nuevo.</p>
     <label class="check"><input type="checkbox" id="demo"> Vistas previas en modo demo (eventos de ejemplo automáticos)</label>
     <div class="fuentes" id="fuentes"></div>
@@ -121,8 +150,8 @@
 
   /* ---------- estado guardado ---------- */
   const KEY = 'cat-stream';
-  let S = { canal: '', volumen: 80, cid: '', token: '', demo: false, res: '720', o: {} };
-  try { S = { ...S, ...JSON.parse(localStorage.getItem(KEY)) }; } catch (e) {}
+  let S = { canal: '', volumen: 80, cid: '', token: '', demo: false, res: '720', o: {}, tts: { on: true, motor: 'auto', vol: 100, vel: 1, max: 180, tipos: ['follow', 'sub', 'gift', 'giftbomb', 'bits', 'raid'] } };
+  try { const saved = JSON.parse(localStorage.getItem(KEY)) || {}; S = { ...S, ...saved, tts: { ...S.tts, ...(saved.tts || {}) } }; } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
   // vuelta de Twitch con el token en el hash
@@ -163,7 +192,18 @@
       if (type === 'check') { if (v !== def) p.set(k, v ? '1' : '0'); else if (v && k === 'panel') p.set(k, '1'); }
       else if (String(v) !== String(def) || ['min', 'nombre'].includes(k)) { if (v !== '' && v != null) p.set(k, v); }
     }
-    if (f.id === 'alertas') p.set('volumen', S.volumen);
+    if (f.id === 'alertas') {
+      p.set('volumen', S.volumen);
+      const T = S.tts;
+      if (!T.on || preview) p.set('tts', '0');
+      else {
+        if (T.motor !== 'auto') p.set('ttsmotor', T.motor);
+        if (T.vol !== 100) p.set('ttsvol', T.vol);
+        if (T.vel !== 1) p.set('ttsvel', T.vel);
+        if (T.max !== 180) p.set('ttsmax', T.max);
+        if (T.tipos.length !== 6) p.set('ttstipos', T.tipos.join(',') || 'ninguno');
+      }
+    }
     if (f.id === 'camara' && K() !== 1) p.set('zoom', K().toFixed(3));
     if (f.id === 'chat') {
       let e = (S.o.chat || {}).escala ?? 125;
@@ -262,6 +302,42 @@
     location.href = 'https://id.twitch.tv/oauth2/authorize?' + p;
   });
   $('#desconectar').addEventListener('click', () => { S.token = ''; save(); check(); refresh(); });
+
+  /* ---------- voz ---------- */
+  const T = S.tts;
+  const syncTts = () => { $('#ttsvol-o').textContent = T.vol + '%'; $('#ttsvel-o').textContent = '×' + (+T.vel).toFixed(2); };
+  $('#tts').checked = T.on; $('#ttsmotor').value = T.motor; $('#ttsvol').value = T.vol; $('#ttsvel').value = T.vel; $('#ttsmax').value = T.max;
+  document.querySelectorAll('#ttstipos input').forEach((i) => { i.checked = T.tipos.includes(i.value); });
+  syncTts();
+  const ttsChanged = () => { syncTts(); save(); clearTimeout(refresh.t); refresh.t = setTimeout(() => refresh('alertas'), 300); };
+  $('#tts').addEventListener('change', (e) => { T.on = e.target.checked; ttsChanged(); });
+  $('#ttsmotor').addEventListener('change', (e) => { T.motor = e.target.value; ttsChanged(); });
+  $('#ttsvol').addEventListener('input', (e) => { T.vol = +e.target.value; ttsChanged(); });
+  $('#ttsvel').addEventListener('input', (e) => { T.vel = +e.target.value; ttsChanged(); });
+  $('#ttsmax').addEventListener('input', (e) => { T.max = Math.max(20, Math.min(300, +e.target.value || 180)); ttsChanged(); });
+  $('#ttstipos').addEventListener('change', () => { T.tipos = [...document.querySelectorAll('#ttstipos input:checked')].map((i) => i.value); ttsChanged(); });
+  function esVoice() {
+    if (!('speechSynthesis' in window)) return null;
+    const vs = speechSynthesis.getVoices().filter((v) => /^es(-|_|$)/i.test(v.lang));
+    return vs.find((v) => /es-(ar|mx|us|419)/i.test(v.lang)) || vs[0] || null;
+  }
+  if ('speechSynthesis' in window) speechSynthesis.getVoices();
+  $('#ttsprobar').addEventListener('click', () => {
+    const text = $('#ttstexto').value.trim(), st = $('#tts-estado');
+    if (!text) return;
+    const v = T.motor !== 'google' ? esVoice() : null;
+    if (v) {
+      const u = new SpeechSynthesisUtterance(text); u.voice = v; u.lang = v.lang; u.rate = T.vel; u.volume = T.vol / 100;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+      st.textContent = `Voz de Windows: ${v.name}`; st.className = 'estado ok';
+    } else if (T.motor === 'navegador') {
+      st.textContent = 'Este navegador no tiene voces en español instaladas.'; st.className = 'estado';
+    } else {
+      const a = new Audio('https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=' + encodeURIComponent(text.slice(0, 190)));
+      a.volume = T.vol / 100; a.playbackRate = Math.max(0.8, Math.min(1.5, T.vel));
+      a.play().then(() => { st.textContent = 'Voz de Google'; st.className = 'estado ok'; }).catch(() => { st.textContent = 'No se pudo usar la voz de Google desde acá.'; st.className = 'estado'; });
+    }
+  });
 
   refresh(); check();
 })();

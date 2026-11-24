@@ -104,21 +104,53 @@
   @keyframes rgb1 { 50% { transform: translate(-16px, 4px); clip-path: inset(10% 0 55% 0); } }
   @keyframes rgb2 { 50% { transform: translate(14px, -4px); clip-path: inset(50% 0 10% 0); } }
   .h-gran p { margin: 22px 0 0; font: 400 64px/1 var(--pantalla); color: #ff8a8a; text-shadow: 0 0 16px rgba(255,45,45,.7); }
-  .h-fin { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 18px; background: rgba(7, 11, 7, .9); opacity: 0; }
-  .h-fin .cat { width: 160px; filter: drop-shadow(0 0 30px rgba(12,238,0,.8)); }
-  .h-fin b { font: 900 64px/1 var(--display); color: var(--verde); text-shadow: var(--glow); }
-  .h-fin span { font: 400 44px/1 var(--pantalla); color: var(--hueso); letter-spacing: .06em; }
+  /* ---------- recuperación: CAT contraataca ---------- */
+  .h-rec { position: absolute; inset: 0; display: none; }
+  .h-rec-panel { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, rgba(12,238,0,.16), transparent 60%), rgba(5, 9, 5, .96); clip-path: inset(0 0 100% 0); }
+  .h-rec-panel::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0,0,0,.25) 2px 4px); pointer-events: none; }
+  .h-barrido { position: absolute; left: 0; right: 0; top: 0; height: 6px; background: var(--verde); box-shadow: 0 0 30px 8px rgba(12,238,0,.7), 0 0 120px 30px rgba(12,238,0,.25); opacity: 0; }
+  .h-rec-term { position: absolute; left: 160px; top: 200px; font: 400 42px/1.3 var(--pantalla); color: #8dff86; white-space: pre-wrap; text-shadow: 0 0 10px rgba(12,238,0,.6); }
+  .h-rec-term .ok { color: #fff; }
+  .h-rec-term .cursor { display: inline-block; width: 18px; height: 34px; background: #8dff86; vertical-align: -4px; animation: h-flick .5s steps(1) infinite; }
+  .h-rec-prog { position: absolute; left: 160px; right: 160px; top: 520px; height: 30px; border: 2px solid var(--verde); opacity: 0; }
+  .h-rec-prog i { position: absolute; inset: 3px auto 3px 3px; width: 0; background: repeating-linear-gradient(90deg, var(--verde) 0 18px, transparent 18px 24px); box-shadow: 0 0 14px rgba(12,238,0,.6); }
+  .h-fin { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 22px; opacity: 0; }
+  .h-fin .cat { width: 190px; filter: drop-shadow(0 0 34px rgba(12,238,0,.85)); }
+  .h-fin b { font: 900 78px/1 var(--display); color: var(--verde); text-shadow: 0 0 26px rgba(12,238,0,.6); letter-spacing: -.02em; }
+  .h-fin span { font: 400 50px/1 var(--pantalla); color: var(--hueso); letter-spacing: .06em; }
   /* fases */
-  #hack.f1 .h-cinta, #hack.f2 .h-cinta, #hack.f3 .h-cinta { opacity: 1; transition: opacity .2s; }
+  #hack.f1 .h-cinta, #hack.f2 .h-cinta, #hack.f3 .h-cinta, #hack.f4 .h-cinta { opacity: 1; transition: opacity .2s; }
   #hack.f2 .h-term { opacity: 1; transform: none; transition: opacity .15s, transform .3s cubic-bezier(.2,1.5,.4,1); }
-  #hack.f3 .h-term { opacity: 0; transform: scale(1.06) skewX(-8deg); transition: all .25s ease-in; }
+  #hack.f3 .h-term, #hack.f4 .h-term { opacity: 0; transform: scale(1.06) skewX(-8deg); transition: all .25s ease-in; }
   #hack.f3 .h-gran { opacity: 1; animation: h-entra .5s steps(4) both, h-tiembla .12s linear .5s infinite; }
   @keyframes h-entra { 0% { opacity: 0; transform: scale(1.6); filter: blur(10px); } 100% { opacity: 1; transform: none; filter: none; } }
   @keyframes h-tiembla { 25% { transform: translate(3px, -2px); } 75% { transform: translate(-3px, 2px); } }
-  #hack.f4 .h-fin { opacity: 1; animation: in-fin .5s cubic-bezier(.2,.7,.2,1) both; }
-  #hack.f4 .h-tinte, #hack.f4 .h-franja, #hack.f4 .h-cinta { display: none; }
-  @keyframes in-fin { 0% { clip-path: inset(50% 0 50% 0); filter: brightness(3); } 100% { clip-path: inset(0 0 0 0); filter: none; } }
-  #hack.f5 { animation: h-apaga .5s cubic-bezier(.6,0,.8,.4) both; }
+  /* f4: la intrusión se rompe (estática y cortes) */
+  #hack.f4 .h-gran { opacity: 1; animation: h-rompe .55s steps(6) both; }
+  @keyframes h-rompe { 0% { clip-path: inset(0); transform: none; } 20% { clip-path: inset(20% 0 40% 0); transform: translateX(-40px); } 40% { clip-path: inset(60% 0 5% 0); transform: translateX(50px) skewX(20deg); } 60% { clip-path: inset(5% 0 70% 0); transform: translateX(-80px); filter: brightness(3); } 100% { clip-path: inset(50% 0 50% 0); opacity: 0; } }
+  #hack.f4 .h-ruido { opacity: 1; }
+  #hack.f4 .h-tinte { background: rgba(255, 255, 255, .18); animation-duration: .06s; }
+  /* f5: barrido verde de arriba abajo que trae la señal de vuelta */
+  #hack.f5 .h-rec, #hack.f6 .h-rec, #hack.f7 .h-rec, #hack.f8 .h-rec { display: block; }
+  #hack.f5 .h-barrido { opacity: 1; animation: h-barre .8s cubic-bezier(.5,0,.3,1) both; }
+  #hack.f5 .h-rec-panel { animation: h-revela .8s cubic-bezier(.5,0,.3,1) both; }
+  @keyframes h-barre { from { top: 0; } to { top: 100%; } }
+  @keyframes h-revela { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+  #hack.f6 .h-rec-panel, #hack.f7 .h-rec-panel, #hack.f8 .h-rec-panel { clip-path: inset(0); }
+  #hack.f6 .h-tinte, #hack.f6 .h-franja, #hack.f6 .h-cinta, #hack.f6 .h-ruido, #hack.f6 .h-gran,
+  #hack.f7 .h-tinte, #hack.f7 .h-franja, #hack.f7 .h-cinta, #hack.f7 .h-ruido, #hack.f7 .h-gran,
+  #hack.f8 .h-tinte, #hack.f8 .h-franja, #hack.f8 .h-cinta, #hack.f8 .h-ruido, #hack.f8 .h-gran { display: none; }
+  #hack.f6 .h-rec-prog { opacity: 1; }
+  /* f7: logo y bienvenida */
+  #hack.f7 .h-rec-term, #hack.f7 .h-rec-prog, #hack.f8 .h-rec-term, #hack.f8 .h-rec-prog { opacity: 0; transition: opacity .25s; }
+  #hack.f7 .h-fin, #hack.f8 .h-fin { opacity: 1; }
+  #hack.f7 .h-fin .cat { animation: h-logo .9s steps(1) both; }
+  @keyframes h-logo { 0% { opacity: 0; } 10% { opacity: 1; } 20% { opacity: .2; } 32% { opacity: 1; } 45% { opacity: .5; } 55%, 100% { opacity: 1; } }
+  #hack.f7 .h-fin b { animation: h-sube .6s cubic-bezier(.2,.7,.2,1) .25s both; }
+  #hack.f7 .h-fin span:last-child { animation: h-sube .6s cubic-bezier(.2,.7,.2,1) .45s both; }
+  @keyframes h-sube { from { opacity: 0; transform: translateY(24px); letter-spacing: .2em; filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+  /* f8: se apaga como un CRT */
+  #hack.f8 { animation: h-apaga .55s cubic-bezier(.6,0,.8,.4) both; }
   @keyframes h-apaga { 55% { transform: scale(1, .01); filter: brightness(3); } 100% { transform: scale(0, .01); opacity: 0; } }
 </style>
 </head>
@@ -150,7 +182,14 @@
       <div class="h-prog"><i id="h-barra"></i><span id="h-pct">0%</span></div>
     </div>
     <div class="h-gran"><small>RAID ENTRANTE</small><h2 id="h-nombre"></h2><p id="h-gente"></p></div>
-    <div class="h-fin"><span class="cat"></span><b>SISTEMA RECUPERADO</b><span id="h-bienv"></span></div>
+    <div class="h-rec">
+      <div class="h-rec-panel">
+        <div class="h-rec-term" id="h-rec-term"></div>
+        <div class="h-rec-prog"><i id="h-rec-barra"></i></div>
+        <div class="h-fin"><span class="cat"></span><b>SISTEMA RECUPERADO</b><span id="h-bienv"></span></div>
+      </div>
+      <div class="h-barrido"></div>
+    </div>
   </div>
 </div>
 <script src="assets/cat-stream.js"></script>
@@ -209,7 +248,16 @@
     setTimeout(() => CAT.play(e.type, 1, k.sound), 140);
     if (k.parts) setTimeout(() => burst(k.parts, k.confeti ? 90 : 36, !!k.confeti), 350);
     if (k.cuenta) cuenta($('#al-tipo'), k.cuenta, ' bits');
-    await wait(dur * 1000);
+    // la voz arranca cuando termina lo más fuerte de la melodía; la alerta espera a que termine de hablar
+    const VOZ = {
+      follow: () => `Gracias por seguir, ${e.name}.`,
+      sub: () => (e.months > 1 ? `${e.name} se suscribió por ${e.months} meses.` : `${e.name} se suscribió.`) + (e.text ? ' ' + CAT.userMsg(e.text) : ''),
+      gift: () => `${e.name} le regaló una suscripción a ${e.to}.`,
+      giftbomb: () => `${e.name} regaló ${e.count} suscripciones. ¡Gracias!`,
+      bits: () => `${e.name} mandó ${e.amount} bits.` + (e.text ? ' ' + CAT.userMsg(e.text) : '')
+    };
+    const voz = wait(+CAT.opt('ttsespera', 1.4) * 1000).then(() => CAT.say(VOZ[e.type](), e.type));
+    await Promise.all([wait(dur * 1000), voz.then(() => wait(800))]);
     box.className = 'alerta t-' + e.type + ' off';
     await wait(700);
     $('#part').innerHTML = '';
@@ -227,77 +275,100 @@
   }
   function cuenta(el, to, suf) {
     const t0 = performance.now(), T = 1400;
-    const step = (now) => { const f = Math.min(1, (now - t0) / T), v = Math.round(to * (1 - Math.pow(1 - f, 3))); el.textContent = v + suf; if (f < 1) requestAnimationFrame(step); };
-    requestAnimationFrame(step);
+    const iv = setInterval(() => { const f = Math.min(1, (performance.now() - t0) / T), v = Math.round(to * (1 - Math.pow(1 - f, 3))); el.textContent = v + suf; if (f >= 1) clearInterval(iv); }, 33);
   }
 
-  /* ---------- raid: hackeo de pantalla ---------- */
+  /* ---------- raid: hackeo de pantalla ----------
+     La música hacker marca los tiempos: el nombre aparece en el golpe (5,9 s) y la señal vuelve al final (10,1 s). */
   const hack = $('#hack');
+  const HIT = 5.9, END = 10.1;
+  async function type(el, lines, speed = 22, tick = 0.12) {
+    let done = '';
+    for (const [txt, end] of lines) {
+      const plain = txt.replace(/<[^>]+>/g, '');
+      for (let i = 1; i <= plain.length; i += 2) {
+        el.innerHTML = done + CAT.esc(plain.slice(0, i)) + '<span class="cursor"></span>';
+        if (i % 8 === 1) CAT.play('tecla', tick);
+        await wait(speed);
+      }
+      done += txt + end + '\n';
+      el.innerHTML = done + '<span class="cursor"></span>';
+      await wait(200);
+    }
+  }
+  // con temporizador y no con requestAnimationFrame: así avanza aunque la fuente no se esté dibujando
+  async function bar(el, ms, pct) {
+    const t0 = performance.now();
+    await new Promise((r) => {
+      const iv = setInterval(() => {
+        const f = Math.min(1, (performance.now() - t0) / ms);
+        el.style.width = `calc(${(f * 100).toFixed(1)}% - 6px)`;
+        if (pct) pct.textContent = Math.round(f * 100) + '%';
+        if (f >= 1) { clearInterval(iv); r(); }
+      }, 33);
+    });
+  }
+  const until = (t0, sec) => wait(Math.max(0, t0 + sec * 1000 - performance.now()));
+
   async function raid(e) {
     const name = String(e.name), n = e.viewers || 0;
-    // franjas de glitch al azar
     let fr = '';
     for (let i = 0; i < 14; i++) fr += `<div class="h-franja" style="top:${(Math.random() * 100).toFixed(1)}%;height:${(4 + Math.random() * 60).toFixed(0)}px;--x:${(Math.random() * 120 - 60).toFixed(0)}px;--t:${(.25 + Math.random() * .5).toFixed(2)}s;--d:${(Math.random() * .4).toFixed(2)}s"></div>`;
     $('#h-franjas').innerHTML = fr;
     const tape = `⚠ INTRUSIÓN DETECTADA ⚠ ${name.toUpperCase()} ESTÁ ADENTRO ⚠ RAID EN CURSO `;
     $('#h-cinta1').textContent = $('#h-cinta2').textContent = tape.repeat(8);
     $('#h-lineas').innerHTML = ''; $('#h-barra').style.width = '0'; $('#h-pct').textContent = '0%';
+    $('#h-rec-term').innerHTML = ''; $('#h-rec-barra').style.width = '0';
     $('#h-nombre').textContent = name; $('#h-nombre').dataset.t = name;
     $('#h-gente').textContent = `+${n} ${n === 1 ? 'INVASOR' : 'INVASORES'} EN LA SEÑAL`;
     $('#h-bienv').textContent = `BIENVENIDOS, GENTE DE ${name.toUpperCase()}`;
 
-    // fase 1: se corta la señal
+    const t0 = performance.now();
+    CAT.play('raidhack', 0.9);
+    // 1: se corta la señal
     hack.className = 'on h-senal f1';
-    CAT.play('senal', 0.8);
     await wait(1300);
-    // fase 2: terminal que escribe sola
+    // 2: terminal intrusa
     hack.className = 'on f2';
-    CAT.play('alarma', 0.55);
-    const L = $('#h-lineas');
-    const lines = [
+    await type($('#h-lineas'), [
       [`> conexión entrante desde <b>twitch.tv/${CAT.esc(name.toLowerCase())}</b>`, ''],
       ['> saltando firewall CAT ........ ', '<span class="ok">OK</span>'],
       [`> inyectando <b>${n}</b> ${n === 1 ? 'usuario' : 'usuarios'} ........ `, '<span class="ok">OK</span>'],
       ['> tomando el control de la pantalla', '']
-    ];
-    let done = '';
-    for (const [txt, end] of lines) {
-      const plain = txt.replace(/<[^>]+>/g, '');
-      for (let i = 1; i <= plain.length; i += 2) {
-        L.innerHTML = done + CAT.esc(plain.slice(0, i)) + '<span class="cursor"></span>';
-        if (i % 6 === 1) CAT.play('tecla', 0.25);
-        await wait(22);
-      }
-      done += txt + end + '\n';
-      L.innerHTML = done + '<span class="cursor"></span>';
-      await wait(260);
-    }
-    // barra de progreso
-    const t0 = performance.now();
-    await new Promise((r) => {
-      const step = (now) => {
-        const f = Math.min(1, (now - t0) / 1500);
-        $('#h-barra').style.width = `calc(${(f * 100).toFixed(1)}% - 6px)`;
-        $('#h-pct').textContent = Math.round(f * 100) + '%';
-        f < 1 ? requestAnimationFrame(step) : r();
-      };
-      requestAnimationFrame(step);
-    });
-    await wait(300);
-    // fase 3: el nombre gigante
+    ]);
+    await bar($('#h-barra'), Math.max(400, t0 + HIT * 1000 - performance.now() - 150), $('#h-pct'));
+    // 3: el nombre gigante, en el golpe de la música
+    await until(t0, HIT);
     hack.className = 'on f3';
-    CAT.play('raid', 1, [[220, 0, .25], [330, .2, .25], [440, .4, .25], [880, .6, .6]]);
-    await wait(+CAT.opt('raidnombre', 4.2) * 1000);
-    // fase 4: CAT recupera el sistema
+    await until(t0, END);
+    // 4: la intrusión se rompe
     hack.className = 'on f4';
-    CAT.play('encender', 0.7); setTimeout(() => CAT.play('sub', 0.7), 160);
-    await wait(2600);
-    hack.className = 'on f4 f5';
-    await wait(520);
+    await wait(550);
+    // 5: barrido verde que trae la señal de vuelta
+    hack.className = 'on f5';
+    CAT.play('encender', 0.8);
+    await wait(820);
+    // 6: CAT contraataca
+    hack.className = 'on f6';
+    await type($('#h-rec-term'), [
+      ['> CAT//DEFENSE activado', ''],
+      ['> rastreando intrusos ........ ', '<span class="ok">OK</span>'],
+      ['> intrusos convertidos en invitados ........ ', '<span class="ok">OK</span>'],
+      ['> restaurando la señal', '']
+    ], 14, 0.1);
+    await bar($('#h-rec-barra'), 700);
+    // 7: sistema recuperado y bienvenida
+    hack.className = 'on f7';
+    CAT.play('raid', 1, [[220, 0, .25], [330, .2, .25], [440, .4, .25], [880, .6, .6]]);
+    const voz = CAT.say(`¡Bienvenida la gente de ${name}! Gracias por el raid.`, 'raid');
+    await Promise.all([wait(3400), voz]);
+    // 8: se apaga
+    hack.className = 'on f7 f8';
+    await wait(560);
     hack.className = '';
   }
 
-  CAT.preload(['encender', 'follow', 'sub', 'gift', 'giftbomb', 'bits', 'raid', 'senal', 'alarma', 'tecla']);
+  CAT.preload(['encender', 'follow', 'sub', 'gift', 'giftbomb', 'bits', 'raid', 'raidhack', 'tecla']);
   CAT.start({ chat: true });
 })();
 </script>
