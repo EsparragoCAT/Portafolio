@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAT · Marco de cámara</title>
+<link rel="stylesheet" href="assets/cat-stream.css">
+<style>
+  /* poné esta fuente del mismo tamaño que tu cámara y encima de ella; el centro es transparente */
+  body { width: 100vw; height: 100vh; }
+  .marco { position: absolute; inset: 14px; border: 3px solid var(--verde); box-shadow: 0 0 24px rgba(12,238,0,.45), inset 0 0 24px rgba(12,238,0,.25); }
+  .marco.redondo { border-radius: 22px; }
+  .hud { inset: -14px; --l: 42px; --t: 5px; }
+  .tag { position: absolute; left: 30px; top: 0; transform: translateY(-50%); display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 10px; background: var(--noche); border: 2px solid var(--verde); }
+  .tag .cat { width: 24px; }
+  .tag b { font: 900 18px/1 var(--display); letter-spacing: .02em; }
+  .vivo { position: absolute; right: 30px; top: 0; transform: translateY(-50%); display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--noche); border: 2px solid var(--verde); font: 700 14px/1 var(--mono); letter-spacing: .16em; color: var(--verde); }
+  .vivo i { width: 11px; height: 11px; border-radius: 50%; background: #ff3b30; box-shadow: 0 0 10px #ff3b30; animation: rec 1.2s steps(1) infinite; }
+  @keyframes rec { 50% { opacity: .2; } }
+  .abajo { position: absolute; right: 30px; bottom: 0; transform: translateY(50%); padding: 5px 12px; background: var(--verde); color: var(--noche); font: 700 13px/1 var(--mono); letter-spacing: .14em; }
+  .abajo:empty { display: none; }
+</style>
+</head>
+<body>
+<div class="marco" id="marco">
+  <div class="hud"></div>
+  <div class="tag"><span class="cat"></span><b id="nombre"></b></div>
+  <div class="vivo"><i></i><span id="vivo"></span></div>
+  <div class="abajo" id="abajo"></div>
+</div>
+<script src="assets/cat-stream.js"></script>
+<script>
+  // ?nombre=ESPARRAGO  ?vivo=EN VIVO  ?abajo=A CAT SIGNATURE  ?redondo=1
+  document.getElementById('nombre').textContent = CAT.opt('nombre', 'ESPARRAGO');
+  document.getElementById('vivo').textContent = CAT.opt('vivo', 'EN VIVO');
+  document.getElementById('abajo').textContent = CAT.opt('abajo', 'A CAT SIGNATURE');
+  if (CAT.opt('redondo') === '1') document.getElementById('marco').classList.add('redondo');
+</script>
+</body>
+</html>

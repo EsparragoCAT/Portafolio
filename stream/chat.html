@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAT · Chat</title>
+<link rel="stylesheet" href="assets/cat-stream.css">
+<style>
+  /* pensado para una fuente de unos 480×800; se adapta a cualquier tamaño */
+  body { width: 100vw; height: 100vh; }
+  .chat { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 18px; overflow: hidden; }
+  .chat.panel { background: rgba(7, 11, 7, .86); border: 2px solid var(--linea); }
+  .chat.panel::before { content: "> CHAT_"; position: absolute; top: 12px; left: 18px; font: 400 24px/1 var(--pantalla); color: var(--verde); text-shadow: var(--glow); }
+  .chat.panel { padding-top: 48px; }
+  .msg { position: relative; padding: 9px 14px 10px 16px; background: rgba(7, 11, 7, .82); border-left: 3px solid var(--c, var(--verde));
+    font: 500 calc(20px * var(--esc, 1))/1.35 var(--lectura); color: var(--hueso); overflow-wrap: anywhere;
+    animation: entra .35s cubic-bezier(.2,.7,.2,1) both; }
+  .msg.sale { animation: sale .5s ease both; }
+  .msg.sistema { border-left-color: var(--verde); background: rgba(12, 238, 0, .12); }
+  .cab { display: flex; align-items: center; gap: 7px; margin-bottom: 2px; flex-wrap: wrap; }
+  .nombre { font: 700 calc(16px * var(--esc, 1))/1.2 var(--mono); color: var(--c, var(--verde)); letter-spacing: .02em; }
+  .nombre::before { content: "> "; color: var(--liquen); }
+  .bd { font: 700 calc(11px * var(--esc, 1))/1 var(--mono); padding: 3px 5px; letter-spacing: .08em; background: var(--bosque); color: var(--verde); }
+  .bd.broadcaster { background: var(--verde); color: var(--noche); }
+  .bd.moderator { background: #12301a; color: #7dffa0; }
+  .bd.vip { background: #2a1630; color: #ff8ae6; }
+  .bd.subscriber { background: #1d2a0f; color: #d6ff6b; }
+  .accion .texto { font-style: italic; color: var(--c, var(--verde)); }
+  .emote { height: 1.6em; vertical-align: middle; margin: -.2em .05em; }
+  @keyframes entra { from { opacity: 0; transform: translateX(-24px); clip-path: inset(0 100% 0 0); } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
+  @keyframes sale { to { opacity: 0; transform: translateX(-16px); } }
+  .lado-der .msg { border-left: 0; border-right: 3px solid var(--c, var(--verde)); text-align: right; }
+  .lado-der .cab { justify-content: flex-end; }
+  .lado-der .msg { animation-name: entra-der; }
+  @keyframes entra-der { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+  .estado { position: absolute; right: 12px; top: 10px; font: 400 18px/1 var(--pantalla); color: var(--liquen); opacity: .7; }
+</style>
+</head>
+<body>
+<div class="chat" id="chat"></div>
+<div class="estado" id="estado" hidden></div>
+<script src="assets/cat-stream.js"></script>
+<script>
+(function () {
+  const box = document.getElementById('chat');
+  // opciones: ?panel=1 (fondo con título), ?lado=der, ?escala=1.2, ?borrar=30 (segundos), ?max=30, ?ocultar=nightbot,streamelements
+  if (CAT.opt('panel') === '1') box.classList.add('panel');
+  if (CAT.opt('lado') === 'der') box.classList.add('lado-der');
+  document.documentElement.style.setProperty('--esc', CAT.opt('escala', 1));
+  const fade = +CAT.opt('borrar', 0), max = +CAT.opt('max', 30);
+  const hidden = new Set(CAT.opt('ocultar', 'nightbot,streamelements,streamlabs,moobot,fossabot').toLowerCase().split(','));
+  const hideCmds = CAT.opt('comandos', '0') !== '1'; // los mensajes que empiezan con ! no se muestran
+
+  const BADGE = { broadcaster: 'HOST', moderator: 'MOD', vip: 'VIP', subscriber: 'SUB', founder: 'SUB', partner: '✓' };
+  const PALETTE = ['#0CEE00', '#9dff8a', '#ffd166', '#7ad7ff', '#ff8ab3', '#c3a6ff', '#ffb36b', '#6bffd8'];
+  // colores muy oscuros no se leen sobre el fondo: se aclaran
+  function color(c, name) {
+    if (!c) { let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) | 0; return PALETTE[Math.abs(h) % PALETTE.length]; }
+    const n = parseInt(c.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    if (l >= 0.45) return c;
+    const k = (0.45 - l) / 0.45 * 0.75 + 0.15, m = (x) => Math.round(x + (255 - x) * k);
+    return `rgb(${m(r)},${m(g)},${m(b)})`;
+  }
+
+  CAT.on('chat', (m) => {
+    if (hidden.has(String(m.name).toLowerCase())) return;
+    if (hideCmds && !m.system && m.text.trim().startsWith('!')) return;
+    const el = document.createElement('div');
+    el.className = 'msg' + (m.system ? ' sistema' : '') + (m.action ? ' accion' : '');
+    el.dataset.id = m.id || ''; el.dataset.user = m.userId || '';
+    el.style.setProperty('--c', color(m.color, m.name));
+    const badges = [...new Set(m.badges.map((b) => BADGE[b]).filter(Boolean))].map((t) => {
+      const cls = Object.keys(BADGE).find((k) => BADGE[k] === t && m.badges.includes(k)) || '';
+      return `<span class="bd ${cls}">${t}</span>`;
+    }).join('');
+    el.innerHTML = `<div class="cab">${badges}<span class="nombre">${CAT.esc(m.name)}</span></div><div class="texto">${CAT.renderText(m.text, m.emotes)}</div>`;
+    box.append(el);
+    while (box.children.length > max) box.firstElementChild.remove();
+    if (fade > 0) setTimeout(() => { el.classList.add('sale'); setTimeout(() => el.remove(), 520); }, fade * 1000);
+  });
+  CAT.on('clear', (c) => {
+    box.querySelectorAll('.msg').forEach((el) => { if (!c.id && !c.userId) el.remove(); else if ((c.id && el.dataset.id === c.id) || (c.userId && el.dataset.user === c.userId)) el.remove(); });
+  });
+  const st = document.getElementById('estado');
+  CAT.on('status', (s) => { if (CAT.opt('estado') === '1') { st.hidden = false; st.textContent = s; } });
+  CAT.start();
+})();
+</script>
+</body>
+</html>

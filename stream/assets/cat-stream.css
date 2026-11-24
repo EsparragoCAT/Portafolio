@@ -1,0 +1,22 @@
+/* CAT Stream: estilos compartidos de los overlays */
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;900&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&family=VT323&display=swap");
+
+:root {
+  --verde: #0CEE00; --noche: #070b07; --musgo: #0f170f; --bosque: #172217; --linea: #223022;
+  --sombra: #0a6b02; --hueso: #eaf4e6; --liquen: #9db39a;
+  --display: "Unbounded", system-ui, sans-serif; --lectura: "Space Grotesk", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace; --pantalla: "VT323", ui-monospace, monospace;
+  --glow: 0 0 18px rgba(12, 238, 0, .55);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: transparent; color: var(--hueso); font: 500 20px/1.35 var(--lectura); overflow: hidden; }
+.cat { display: inline-block; aspect-ratio: 839 / 900; background: var(--verde); -webkit-mask: url("cat-mask.png") center / contain no-repeat; mask: url("cat-mask.png") center / contain no-repeat; }
+.hud { position: absolute; inset: 0; pointer-events: none;
+  --c: var(--verde); --l: 28px; --t: 3px;
+  background:
+    linear-gradient(var(--c), var(--c)) 0 0 / var(--l) var(--t) no-repeat, linear-gradient(var(--c), var(--c)) 0 0 / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 0 / var(--l) var(--t) no-repeat, linear-gradient(var(--c), var(--c)) 100% 0 / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) 0 100% / var(--l) var(--t) no-repeat, linear-gradient(var(--c), var(--c)) 0 100% / var(--t) var(--l) no-repeat,
+    linear-gradient(var(--c), var(--c)) 100% 100% / var(--l) var(--t) no-repeat, linear-gradient(var(--c), var(--c)) 100% 100% / var(--t) var(--l) no-repeat; }
+.scan::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(to bottom, transparent 0 2px, rgba(0, 0, 0, .18) 2px 3px); }
+.chip { display: inline-block; padding: 4px 9px; background: var(--verde); color: var(--noche); font: 700 13px/1.2 var(--mono); letter-spacing: .1em; text-transform: uppercase; }

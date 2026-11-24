@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAT Stream</title>
+<link rel="icon" href="assets/favicon-64.png">
+<link rel="stylesheet" href="assets/cat-stream.css">
+<style>
+  html, body { overflow: auto; background: var(--noche); font-size: 15px; }
+  body { min-height: 100vh; background: linear-gradient(var(--linea) 1px, transparent 1px) 0 0 / 40px 40px, linear-gradient(90deg, var(--linea) 1px, transparent 1px) 0 0 / 40px 40px, #050805; }
+  .top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 24px; background: var(--noche); border-bottom: 1px solid var(--linea); }
+  .marca { display: flex; align-items: center; gap: 12px; }
+  .marca .cat { width: 30px; }
+  .marca b { font: 900 18px/1 var(--display); }
+  .marca small { font: 500 11px/1 var(--mono); color: var(--liquen); letter-spacing: .1em; text-transform: uppercase; }
+  .pruebas { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .pruebas span { font: 500 11px/1 var(--mono); color: var(--liquen); text-transform: uppercase; letter-spacing: .08em; margin-right: 4px; }
+  main { max-width: 1240px; margin: 0 auto; padding: 28px 24px 80px; display: grid; gap: 22px; }
+  .caja { background: var(--musgo); border: 1px solid var(--linea); padding: 22px; display: grid; gap: 16px; }
+  h2 { margin: 0; display: flex; gap: 10px; align-items: baseline; font: 700 20px/1.2 var(--display); }
+  h2 small { font: 500 12px/1 var(--mono); color: var(--verde); letter-spacing: .1em; }
+  p { margin: 0; color: var(--liquen); line-height: 1.5; }
+  p b, li b { color: var(--hueso); }
+  a { color: var(--verde); }
+  code { font: 500 13px/1.4 var(--mono); color: var(--verde); background: var(--noche); padding: 1px 6px; }
+  .campos { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  label.campo { display: grid; gap: 6px; }
+  label.campo > span { font: 500 11px/1.2 var(--mono); color: var(--liquen); text-transform: uppercase; letter-spacing: .06em; }
+  input[type=text], input[type=number], select { width: 100%; min-height: 40px; padding: 8px 11px; background: var(--noche); color: var(--hueso); border: 1px solid var(--linea); font: 500 14px/1.3 var(--lectura); border-radius: 0; }
+  input:focus, select:focus { outline: none; border-color: var(--verde); }
+  .check { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--hueso); }
+  .check input { accent-color: #0CEE00; width: 16px; height: 16px; }
+  .btn { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 14px; font: 700 11px/1 var(--display); text-transform: uppercase; letter-spacing: .04em; color: var(--hueso); box-shadow: inset 0 0 0 1px var(--linea); background: var(--noche); }
+  .btn:hover { color: var(--verde); box-shadow: inset 0 0 0 1px var(--verde); }
+  .btn:focus-visible { outline: 2px solid var(--verde); outline-offset: 2px; }
+  .btn.pri { background: var(--verde); color: var(--noche); box-shadow: none; }
+  .fuentes { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 18px; }
+  .fuente { background: var(--noche); border: 1px solid var(--linea); display: grid; align-content: start; }
+  .fu-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 14px 16px 10px; }
+  .fu-cab b { font: 700 15px/1.2 var(--display); }
+  .fu-cab span { font: 400 20px/1 var(--pantalla); color: var(--verde); }
+  .vista { position: relative; overflow: hidden; background: repeating-conic-gradient(#0d150d 0 25%, #0a110a 0 50%) 0 0 / 22px 22px; border-top: 1px solid var(--linea); border-bottom: 1px solid var(--linea); }
+  .vista iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; background: transparent; }
+  .fu-url { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 12px 16px 4px; }
+  .fu-url input { font: 500 12px/1.3 var(--mono); color: var(--liquen); }
+  .fu-op { padding: 8px 16px 16px; display: grid; gap: 10px; }
+  .fu-op .campos { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  ol { margin: 0; padding-left: 20px; color: var(--liquen); display: grid; gap: 6px; line-height: 1.5; }
+  .estado { font: 500 13px/1.4 var(--mono); color: var(--liquen); }
+  .estado.ok { color: var(--verde); }
+  .aviso { border-left: 3px solid #ffb000; padding: 10px 14px; background: rgba(255,176,0,.08); color: #ffd98a; }
+  @media (max-width: 600px) { .top { flex-direction: column; align-items: flex-start; } main { padding: 20px 16px 60px; } .fuentes { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="marca"><span class="cat"></span><b>CAT</b><small>Panel de stream</small></div>
+  <div class="pruebas" id="pruebas">
+    <span>Probar en las vistas</span>
+    <button class="btn" data-a="follow">Follow</button>
+    <button class="btn" data-a="sub">Sub</button>
+    <button class="btn" data-a="gift">Regalo</button>
+    <button class="btn" data-a="giftbomb">Lluvia</button>
+    <button class="btn" data-a="bits">Bits</button>
+    <button class="btn" data-a="raid">Raid</button>
+    <button class="btn" data-c="1">Mensaje</button>
+    <label class="check" style="margin-left:6px"><input type="checkbox" id="sonar" checked> Con sonido</label>
+  </div>
+</header>
+
+<main>
+  <section class="caja">
+    <h2><small>01</small>Tu canal</h2>
+    <div class="campos">
+      <label class="campo"><span>Canal de Twitch</span><input type="text" id="canal" placeholder="tu_canal" autocomplete="off" spellcheck="false"></label>
+      <label class="campo"><span>Volumen de alertas (%)</span><input type="number" id="volumen" min="0" max="100" value="80"></label>
+    </div>
+    <p>Sonidos: follow, sub, regalo, lluvia, bits y raid tienen cada uno el suyo (en <code>assets/sonidos/</code>; reemplazá el <code>.ogg</code> con el mismo nombre para cambiarlo). Probalos con los botones de arriba.</p>
+    <p>El chat, los subs, los regalos, los bits y los raids se leen del chat público: con el nombre del canal alcanza. En tu chat, <code>!test</code> o <code>!test raid</code> dispara una alerta de prueba (solo vos o tus mods).</p>
+  </section>
+
+  <section class="caja">
+    <h2><small>02</small>Follows (opcional)</h2>
+    <p>Twitch no avisa los follows por el chat. Para mostrarlos hay que conectar tu cuenta una vez:</p>
+    <ol>
+      <li>Entrá a <a href="https://dev.twitch.tv/console/apps" target="_blank" rel="noopener">dev.twitch.tv/console/apps</a> con tu cuenta y tocá <b>Registrar tu aplicación</b>.</li>
+      <li>Nombre: el que quieras (por ejemplo <code>CAT Stream</code>). Categoría: <b>Broadcaster Suite</b>. Tipo de cliente: <b>Público</b>.</li>
+      <li>En <b>URL de redirección OAuth</b> pegá exactamente: <code id="redir"></code></li>
+      <li>Copiá el <b>Client ID</b>, pegalo acá abajo y tocá <b>Conectar con Twitch</b>.</li>
+    </ol>
+    <div class="campos">
+      <label class="campo"><span>Client ID</span><input type="text" id="cid" autocomplete="off" spellcheck="false"></label>
+    </div>
+    <div class="pruebas">
+      <button class="btn pri" id="conectar" type="button">Conectar con Twitch</button>
+      <button class="btn" id="desconectar" type="button">Desconectar</button>
+      <span class="estado" id="tw-estado"></span>
+    </div>
+    <p class="aviso">Con la cuenta conectada, la URL de <b>Alertas</b> y de <b>Barra</b> lleva tu token (solo puede leer follows). No la muestres en pantalla ni la compartas. El token dura unos 60 días; cuando venza, volvé a tocar Conectar y actualizá la URL en Meld.</p>
+  </section>
+
+  <section class="caja">
+    <h2><small>03</small>Fuentes para Meld</h2>
+    <p>En Meld Studio: agregá una capa de tipo <b>navegador / Browser</b> a la escena, pegá la URL y poné el tamaño indicado. Cualquier cambio de opciones acá cambia la URL: copiala de nuevo.</p>
+    <label class="check"><input type="checkbox" id="demo"> Vistas previas en modo demo (eventos de ejemplo automáticos)</label>
+    <div class="fuentes" id="fuentes"></div>
+  </section>
+</main>
+
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const base = location.href.replace(/[#?].*$/, '').replace(/[^/]*$/, '');
+  const self = base + 'index.html';
+  $('#redir').textContent = location.origin + location.pathname;
+
+  /* ---------- estado guardado ---------- */
+  const KEY = 'cat-stream';
+  let S = { canal: '', volumen: 80, cid: '', token: '', demo: false, o: {} };
+  try { S = { ...S, ...JSON.parse(localStorage.getItem(KEY)) }; } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  // vuelta de Twitch con el token en el hash
+  if (location.hash.includes('access_token=')) {
+    const h = new URLSearchParams(location.hash.slice(1));
+    S.token = h.get('access_token') || ''; save();
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
+  /* ---------- fuentes ---------- */
+  const FU = [
+    { id: 'alertas', name: 'Alertas', size: [1920, 1080], file: 'alertas.html', twitch: true,
+      ops: [['duracion', 'Duración (s)', 'number', 7], ['minbits', 'Bits mínimos', 'number', 1], ['mensajes', 'Mostrar mensaje', 'check', true]] },
+    { id: 'chat', name: 'Chat', size: [480, 800], file: 'chat.html',
+      ops: [['panel', 'Con fondo y título', 'check', true], ['lado', 'Lado', 'select', 'izq', ['izq', 'der']], ['borrar', 'Borrar tras (s, 0 = nunca)', 'number', 0], ['escala', 'Tamaño de letra', 'number', 1]] },
+    { id: 'inicio', name: 'Escena: empezando', size: [1920, 1080], file: 'escena.html', fixed: { modo: 'inicio' },
+      ops: [['min', 'Cuenta regresiva (min)', 'number', 5], ['titulo', 'Título propio', 'text', '']] },
+    { id: 'pausa', name: 'Escena: vuelvo enseguida', size: [1920, 1080], file: 'escena.html', fixed: { modo: 'pausa' },
+      ops: [['min', 'Cuenta regresiva (min)', 'number', 0], ['titulo', 'Título propio', 'text', '']] },
+    { id: 'fin', name: 'Escena: fin', size: [1920, 1080], file: 'escena.html', fixed: { modo: 'fin' },
+      ops: [['titulo', 'Título propio', 'text', ''], ['sub', 'Bajada', 'text', '']] },
+    { id: 'camara', name: 'Marco de cámara', size: [640, 360], file: 'camara.html',
+      ops: [['nombre', 'Nombre', 'text', 'ESPARRAGO'], ['abajo', 'Texto de abajo', 'text', 'A CAT SIGNATURE'], ['redondo', 'Esquinas redondas', 'check', false]] },
+    { id: 'barra', name: 'Barra inferior', size: [1920, 64], file: 'barra.html', twitch: true,
+      ops: [['msgs', 'Mensajes (separados por |)', 'text', 'Seguime en YouTube: @Esparragoh|Mis mods: github.com/EsparragoCAT|A CAT Signature'], ['ultimos', 'Últimos (sub,bits,raid,follow)', 'text', 'sub,bits,raid']] }
+  ];
+
+  function url(f, preview) {
+    const p = new URLSearchParams();
+    if (S.canal) p.set('canal', S.canal.toLowerCase().trim());
+    Object.entries(f.fixed || {}).forEach(([k, v]) => p.set(k, v));
+    const o = S.o[f.id] || {};
+    for (const [k, , type, def] of f.ops) {
+      const v = k in o ? o[k] : def;
+      if (type === 'check') { if (v !== def) p.set(k, v ? '1' : '0'); else if (v && k === 'panel') p.set(k, '1'); }
+      else if (String(v) !== String(def) || ['min', 'nombre'].includes(k)) { if (v !== '' && v != null) p.set(k, v); }
+    }
+    if (f.id === 'alertas') p.set('volumen', S.volumen);
+    if (f.twitch && S.cid && S.token && !preview) { p.set('cid', S.cid); p.set('token', S.token); }
+    if (preview) { p.set('sonido', '0'); if (S.demo) p.set('demo', '1'); }
+    return base + f.file + '?' + p.toString();
+  }
+
+  const box = $('#fuentes');
+  box.innerHTML = FU.map((f) => `
+    <article class="fuente" data-f="${f.id}">
+      <div class="fu-cab"><b>${f.name}</b><span>${f.size[0]}×${f.size[1]}</span></div>
+      <div class="vista" style="aspect-ratio:${f.size[0]}/${Math.max(f.size[1], f.size[0] / 6)}"><iframe title="Vista previa: ${f.name}" width="${f.size[0]}" height="${f.size[1]}"></iframe></div>
+      <div class="fu-url"><input type="text" readonly aria-label="URL de ${f.name}"><button class="btn pri" type="button" data-copy>Copiar</button></div>
+      <div class="fu-op"><div class="campos">${f.ops.map(([k, lbl, type, def, choices]) => {
+        const v = (S.o[f.id] || {})[k] ?? def;
+        if (type === 'check') return `<label class="check"><input type="checkbox" data-k="${k}" ${v ? 'checked' : ''}> ${lbl}</label>`;
+        if (type === 'select') return `<label class="campo"><span>${lbl}</span><select data-k="${k}">${choices.map((c) => `<option ${c === v ? 'selected' : ''}>${c}</option>`).join('')}</select></label>`;
+        return `<label class="campo"><span>${lbl}</span><input type="${type}" data-k="${k}" value="${String(v).replace(/"/g, '&quot;')}"></label>`;
+      }).join('')}</div></div>
+    </article>`).join('');
+
+  function scale(art) {
+    const v = art.querySelector('.vista'), fr = art.querySelector('iframe');
+    const s = v.clientWidth / fr.width; fr.style.transform = `scale(${s})`;
+    if (+fr.height * s < v.clientHeight) fr.style.top = (v.clientHeight - fr.height * s) / 2 + 'px';
+  }
+  const ro = new ResizeObserver((es) => es.forEach((e) => scale(e.target.closest('.fuente'))));
+
+  function refresh(onlyId) {
+    for (const f of FU) {
+      if (onlyId && f.id !== onlyId) continue;
+      const art = box.querySelector(`[data-f="${f.id}"]`);
+      art.querySelector('.fu-url input').value = url(f, false);
+      const fr = art.querySelector('iframe'), src = url(f, true);
+      if (fr.dataset.src !== src) { fr.dataset.src = src; fr.src = src; }
+    }
+  }
+  box.querySelectorAll('.fuente').forEach((a) => { ro.observe(a.querySelector('.vista')); });
+
+  box.addEventListener('input', (e) => {
+    const el = e.target.closest('[data-k]'); if (!el) return;
+    const id = el.closest('.fuente').dataset.f;
+    S.o[id] = S.o[id] || {};
+    S.o[id][el.dataset.k] = el.type === 'checkbox' ? el.checked : el.type === 'number' ? +el.value : el.value;
+    save(); clearTimeout(refresh.t); refresh.t = setTimeout(() => refresh(id), 400);
+  });
+  box.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-copy]'); if (!b) return;
+    const inp = b.previousElementSibling;
+    try { await navigator.clipboard.writeText(inp.value); } catch (err) { inp.select(); document.execCommand('copy'); }
+    b.textContent = 'Copiada'; setTimeout(() => { b.textContent = 'Copiar'; }, 1400);
+  });
+
+  /* ---------- canal y opciones generales ---------- */
+  $('#canal').value = S.canal; $('#volumen').value = S.volumen; $('#cid').value = S.cid; $('#demo').checked = S.demo;
+  $('#canal').addEventListener('input', (e) => { S.canal = e.target.value.replace(/[^a-zA-Z0-9_]/g, ''); save(); clearTimeout(refresh.t); refresh.t = setTimeout(() => refresh(), 500); });
+  $('#volumen').addEventListener('input', (e) => { S.volumen = Math.max(0, Math.min(100, +e.target.value || 0)); save(); refresh('alertas'); });
+  $('#cid').addEventListener('input', (e) => { S.cid = e.target.value.trim(); save(); });
+  $('#demo').addEventListener('change', (e) => { S.demo = e.target.checked; save(); refresh(); });
+
+  /* ---------- pruebas ---------- */
+  $('#pruebas').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const msg = b.dataset.a ? { cat: 'alert', kind: b.dataset.a } : { cat: 'chat' };
+    box.querySelectorAll('iframe').forEach((fr) => fr.contentWindow && fr.contentWindow.postMessage(msg, '*'));
+    // las vistas previas van en silencio; el sonido de prueba suena acá, al volumen elegido
+    if (b.dataset.a && $('#sonar').checked) {
+      const play = (n, g) => { const a = new Audio('assets/sonidos/' + n + '.ogg'); a.volume = Math.min(1, g * S.volumen / 100); a.play().catch(() => {}); };
+      play('encender', 0.45); setTimeout(() => play(b.dataset.a, 1), 140);
+    }
+  });
+
+  /* ---------- conexión para follows ---------- */
+  async function check() {
+    const st = $('#tw-estado');
+    if (!S.cid || !S.token) { st.textContent = 'Sin conectar.'; st.className = 'estado'; return; }
+    try {
+      const r = await fetch('https://id.twitch.tv/oauth2/validate', { headers: { Authorization: 'OAuth ' + S.token } });
+      if (!r.ok) throw 0;
+      const j = await r.json();
+      const days = Math.floor(j.expires_in / 86400);
+      st.textContent = `Conectado como ${j.login}${days ? ` · vence en ${days} días` : ''}.`; st.className = 'estado ok';
+      if (!S.canal) { S.canal = j.login; $('#canal').value = j.login; save(); refresh(); }
+    } catch (e) { st.textContent = 'El token venció o no es válido: tocá Conectar de nuevo.'; st.className = 'estado'; }
+  }
+  $('#conectar').addEventListener('click', () => {
+    if (!S.cid) { $('#cid').focus(); $('#tw-estado').textContent = 'Primero pegá el Client ID.'; return; }
+    const p = new URLSearchParams({ client_id: S.cid, redirect_uri: location.origin + location.pathname, response_type: 'token', scope: 'moderator:read:followers' });
+    location.href = 'https://id.twitch.tv/oauth2/authorize?' + p;
+  });
+  $('#desconectar').addEventListener('click', () => { S.token = ''; save(); check(); refresh(); });
+
+  refresh(); check();
+})();
+</script>
+</body>
+</html>

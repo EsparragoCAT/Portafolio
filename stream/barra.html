@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAT · Barra inferior</title>
+<link rel="stylesheet" href="assets/cat-stream.css">
+<style>
+  /* fuente de 1920×64, abajo de todo */
+  html { font-size: calc(100vh / 64); } /* 1rem = 1px de una barra de 64px de alto */
+  body { width: 100vw; height: 100vh; }
+  .barra { position: absolute; inset: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: stretch; background: rgba(7, 11, 7, .94); border-top: 3px solid var(--verde); box-shadow: 0 -6px 30px rgba(12,238,0,.25); }
+  .barra > * { display: flex; align-items: center; padding: 0 22rem; }
+  .marca { gap: 12rem; background: var(--verde); color: var(--noche); font: 900 30rem/1 var(--display); clip-path: polygon(0 0, 100% 0, calc(100% - 26rem) 100%, 0 100%); padding-right: 46rem; }
+  .marca .cat { height: 40rem; width: auto; background: var(--noche); }
+  .rota { position: relative; overflow: hidden; font: 500 22rem/1 var(--mono); color: var(--hueso); letter-spacing: .04em; }
+  .rota span { position: absolute; left: 22rem; right: 22rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: transform .5s cubic-bezier(.2,.7,.2,1), opacity .5s; }
+  .rota span::before { content: "> "; color: var(--verde); }
+  .rota span.fuera { transform: translateY(-120%); opacity: 0; }
+  .rota span.antes { transform: translateY(120%); opacity: 0; }
+  .ultimos { gap: 26rem; border-left: 2px solid var(--linea); }
+  .ult { display: grid; gap: 5rem; }
+  .ult small { font: 700 12rem/1 var(--mono); color: var(--verde); letter-spacing: .14em; }
+  .ult b { font: 700 19rem/1 var(--display); color: var(--hueso); max-width: 16vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ult b.nuevo { animation: nuevo 1.2s steps(2) 3; }
+  @keyframes nuevo { 50% { color: var(--verde); text-shadow: var(--glow); } }
+  .reloj { border-left: 2px solid var(--linea); font: 400 40rem/1 var(--pantalla); color: var(--verde); text-shadow: var(--glow); min-width: 96rem; justify-content: center; }
+</style>
+</head>
+<body>
+<div class="barra scan">
+  <div class="marca"><span class="cat"></span>CAT</div>
+  <div class="rota" id="rota"></div>
+  <div class="ultimos" id="ultimos"></div>
+  <div class="reloj" id="reloj"></div>
+</div>
+<script src="assets/cat-stream.js"></script>
+<script>
+(function () {
+  const $ = (s) => document.getElementById(s);
+  // mensajes que rotan: ?msgs=uno|dos|tres  · cada cuántos segundos: ?rotar=8
+  const msgs = CAT.opt('msgs', 'Seguime en YouTube: @Esparragoh|Mis mods: github.com/EsparragoCAT|Code, Art & Technology|A CAT Signature').split('|').filter(Boolean);
+  const rota = $('rota');
+  let i = 0, cur = null;
+  function show() {
+    const s = document.createElement('span'); s.className = 'antes'; s.textContent = msgs[i++ % msgs.length];
+    rota.append(s); void s.offsetWidth; s.className = '';
+    if (cur) { const old = cur; old.className = 'fuera'; setTimeout(() => old.remove(), 600); }
+    cur = s;
+  }
+  show(); if (msgs.length > 1) setInterval(show, +CAT.opt('rotar', 8) * 1000);
+
+  // últimos eventos de esta transmisión: ?ultimos=sub,bits,raid,follow
+  const LBL = { sub: 'ÚLT. SUB', bits: 'ÚLT. BITS', raid: 'ÚLT. RAID', follow: 'ÚLT. FOLLOW', gift: 'ÚLT. REGALO' };
+  const show2 = CAT.opt('ultimos', 'sub,bits,raid').split(',').filter((k) => LBL[k]);
+  $('ultimos').innerHTML = show2.map((k) => `<div class="ult"><small>${LBL[k]}</small><b id="u-${k}">—</b></div>`).join('');
+  if (!show2.length) $('ultimos').remove();
+  CAT.on('alert', (e) => {
+    const key = e.type === 'giftbomb' ? 'gift' : e.type;
+    const el = $('u-' + key); if (!el) return;
+    el.textContent = e.type === 'bits' ? `${e.name} · ${e.amount}` : e.type === 'giftbomb' ? `${e.name} ×${e.count}` : e.name;
+    el.classList.remove('nuevo'); void el.offsetWidth; el.classList.add('nuevo');
+  });
+
+  const clock = () => { const d = new Date(); $('reloj').textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  if (CAT.opt('reloj', '1') === '1') { clock(); setInterval(clock, 5000); } else $('reloj').remove();
+  CAT.start();
+})();
+</script>
+</body>
+</html>
