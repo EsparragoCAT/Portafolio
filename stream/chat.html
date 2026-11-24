@@ -6,7 +6,7 @@
 <title>CAT · Chat</title>
 <link rel="stylesheet" href="assets/cat-stream.css">
 <style>
-  /* pensado para una fuente de unos 480×800; se adapta a cualquier tamaño */
+  /* se arma a 400 px de ancho y se escala al ancho real de la fuente: más ancha = letra más grande */
   body { width: 100vw; height: 100vh; }
   .chat { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 18px; overflow: hidden; }
   .chat.panel { background: rgba(7, 11, 7, .86); border: 2px solid var(--linea); }
@@ -36,7 +36,7 @@
   .estado { position: absolute; right: 12px; top: 10px; font: 400 18px/1 var(--pantalla); color: var(--liquen); opacity: .7; }
 </style>
 </head>
-<body>
+<body data-base="400">
 <div id="z">
 <div class="chat" id="chat"></div>
 <div class="estado" id="estado" hidden></div>
@@ -48,7 +48,8 @@
   // opciones: ?panel=1 (fondo con título), ?lado=der, ?escala=1.2, ?borrar=30 (segundos), ?max=30, ?ocultar=nightbot,streamelements
   if (CAT.opt('panel') === '1') box.classList.add('panel');
   if (CAT.opt('lado') === 'der') box.classList.add('lado-der');
-  document.documentElement.style.setProperty('--esc', CAT.opt('escala', 1));
+  // la letra crece con el ancho de la fuente (base 400 px) y con ?escala= (1.25 por defecto)
+  document.documentElement.style.setProperty('--esc', CAT.opt('escala', 1.25));
   const fade = +CAT.opt('borrar', 0), max = +CAT.opt('max', 30);
   const hidden = new Set(CAT.opt('ocultar', 'nightbot,streamelements,streamlabs,moobot,fossabot').toLowerCase().split(','));
   const hideCmds = CAT.opt('comandos', '0') !== '1'; // los mensajes que empiezan con ! no se muestran

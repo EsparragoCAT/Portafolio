@@ -45,6 +45,9 @@
   .fu-url { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 12px 16px 4px; }
   .fu-url input { font: 500 12px/1.3 var(--mono); color: var(--liquen); }
   .fu-op { padding: 8px 16px 16px; display: grid; gap: 10px; }
+  .rango { grid-column: 1 / -1; }
+  .rango input { width: 100%; accent-color: #0CEE00; }
+  .rango output { color: var(--verde); }
   .fu-op .campos { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
   ol { margin: 0; padding-left: 20px; color: var(--liquen); display: grid; gap: 6px; line-height: 1.5; }
   .estado { font: 500 13px/1.4 var(--mono); color: var(--liquen); }
@@ -103,7 +106,7 @@
 
   <section class="caja">
     <h2><small>03</small>Fuentes para Meld</h2>
-    <p>En Meld Studio: agregá una capa de tipo <b>navegador / Browser</b> a la escena, pegá la URL y poné el tamaño indicado (ya está calculado para la resolución que elegiste arriba). El marco de cámara va del mismo tamaño que tu cámara: si la tuya es otra medida, usá esa. Cualquier cambio de opciones acá cambia la URL: copiala de nuevo.</p>
+    <p>En Meld Studio: agregá una capa de tipo <b>navegador / Browser</b> a la escena, pegá la URL y poné el tamaño indicado (ya está calculado para la resolución que elegiste arriba). El marco de cámara va del mismo tamaño que tu cámara: si la tuya es otra medida, usá esa. El chat podés hacerlo más ancho o más alto en Meld: la letra crece con el ancho, y además tiene su propio control de tamaño. Cualquier cambio de opciones acá cambia la URL: copiala de nuevo.</p>
     <label class="check"><input type="checkbox" id="demo"> Vistas previas en modo demo (eventos de ejemplo automáticos)</label>
     <div class="fuentes" id="fuentes"></div>
   </section>
@@ -134,7 +137,7 @@
     { id: 'alertas', name: 'Alertas', size: [1920, 1080], file: 'alertas.html', twitch: true,
       ops: [['duracion', 'Duración (s)', 'number', 7], ['minbits', 'Bits mínimos', 'number', 1], ['mensajes', 'Mostrar mensaje', 'check', true]] },
     { id: 'chat', name: 'Chat', size: [480, 800], file: 'chat.html',
-      ops: [['panel', 'Con fondo y título', 'check', true], ['lado', 'Lado', 'select', 'izq', ['izq', 'der']], ['borrar', 'Borrar tras (s, 0 = nunca)', 'number', 0], ['escala', 'Tamaño de letra', 'number', 1]] },
+      ops: [['panel', 'Con fondo y título', 'check', true], ['lado', 'Lado', 'select', 'izq', ['izq', 'der']], ['borrar', 'Borrar tras (s, 0 = nunca)', 'number', 0], ['escala', 'Tamaño de letra', 'range', 125]] },
     { id: 'inicio', name: 'Escena: empezando', size: [1920, 1080], file: 'escena.html', fixed: { modo: 'inicio' },
       ops: [['min', 'Cuenta regresiva (min)', 'number', 5], ['titulo', 'Título propio', 'text', '']] },
     { id: 'pausa', name: 'Escena: vuelvo enseguida', size: [1920, 1080], file: 'escena.html', fixed: { modo: 'pausa' },
@@ -161,7 +164,12 @@
       else if (String(v) !== String(def) || ['min', 'nombre'].includes(k)) { if (v !== '' && v != null) p.set(k, v); }
     }
     if (f.id === 'alertas') p.set('volumen', S.volumen);
-    if ((f.id === 'chat' || f.id === 'camara') && K() !== 1) p.set('zoom', K().toFixed(3));
+    if (f.id === 'camara' && K() !== 1) p.set('zoom', K().toFixed(3));
+    if (f.id === 'chat') {
+      let e = (S.o.chat || {}).escala ?? 125;
+      if (e < 10) e = Math.round(e * 125); // guardado de la versión anterior (1 = tamaño viejo)
+      if (e !== 125) p.set('escala', (e / 100).toFixed(2)); else p.delete('escala');
+    }
     if (f.twitch && S.cid && S.token && !preview) { p.set('cid', S.cid); p.set('token', S.token); }
     if (preview) { p.set('sonido', '0'); if (S.demo) p.set('demo', '1'); }
     return base + f.file + '?' + p.toString();
@@ -177,6 +185,7 @@
         const v = (S.o[f.id] || {})[k] ?? def;
         if (type === 'check') return `<label class="check"><input type="checkbox" data-k="${k}" ${v ? 'checked' : ''}> ${lbl}</label>`;
         if (type === 'select') return `<label class="campo"><span>${lbl}</span><select data-k="${k}">${choices.map((c) => `<option ${c === v ? 'selected' : ''}>${c}</option>`).join('')}</select></label>`;
+        if (type === 'range') return `<label class="campo rango"><span>${lbl}: <output>${v}%</output></span><input type="range" min="60" max="250" step="5" data-k="${k}" value="${v}"></label>`;
         return `<label class="campo"><span>${lbl}</span><input type="${type}" data-k="${k}" value="${String(v).replace(/"/g, '&quot;')}"></label>`;
       }).join('')}</div></div>
     </article>`).join('');
@@ -203,7 +212,8 @@
     const el = e.target.closest('[data-k]'); if (!el) return;
     const id = el.closest('.fuente').dataset.f;
     S.o[id] = S.o[id] || {};
-    S.o[id][el.dataset.k] = el.type === 'checkbox' ? el.checked : el.type === 'number' ? +el.value : el.value;
+    S.o[id][el.dataset.k] = el.type === 'checkbox' ? el.checked : (el.type === 'number' || el.type === 'range') ? +el.value : el.value;
+    if (el.type === 'range') el.closest('label').querySelector('output').textContent = el.value + '%';
     save(); clearTimeout(refresh.t); refresh.t = setTimeout(() => refresh(id), 400);
   });
   box.addEventListener('click', async (e) => {

@@ -6,47 +6,152 @@
 <title>CAT · Alertas</title>
 <link rel="stylesheet" href="assets/cat-stream.css">
 <style>
-  /* lienzo pensado para 1920×1080; la alerta va arriba al centro */
+  /* diseñado a 1920×1080; en otra resolución se escala solo */
   body { width: 100vw; height: 100vh; }
-  .alerta { position: absolute; left: 50%; top: 64px; width: 760px; transform: translateX(-50%); opacity: 0; pointer-events: none; }
+  #z { position: absolute; inset: 0; }
+
+  /* ================= alertas comunes ================= */
+  .alerta { --a: var(--verde); --w: 760px; --top: 64px; --nombre: 52px;
+    position: absolute; left: 50%; top: var(--top); width: var(--w); transform: translateX(-50%); opacity: 0; pointer-events: none; }
   .al-caja { position: relative; display: grid; grid-template-columns: 132px 1fr; align-items: center; gap: 26px; padding: 26px 34px 30px 30px;
-    background: radial-gradient(ellipse 70% 120% at 12% 50%, rgba(12,238,0,.2), transparent 70%), rgba(7, 11, 7, .94);
-    border: 2px solid var(--verde); box-shadow: 0 0 0 6px rgba(7,11,7,.6), 0 0 48px rgba(12,238,0,.35); overflow: hidden; }
-  .al-caja .hud { inset: 10px; --l: 22px; }
-  .al-icono { position: relative; width: 132px; height: 132px; display: grid; place-items: center; }
-  .al-icono .cat { width: 112px; filter: drop-shadow(0 0 16px rgba(12,238,0,.7)); }
-  .al-icono b { position: absolute; right: -4px; bottom: -2px; font: 400 44px/1 var(--pantalla); color: var(--noche); background: var(--verde); padding: 2px 8px 0; }
+    background: radial-gradient(ellipse 70% 120% at 12% 50%, color-mix(in srgb, var(--a) 22%, transparent), transparent 70%), rgba(7, 11, 7, .95);
+    border: 2px solid var(--a); box-shadow: 0 0 0 6px rgba(7,11,7,.6), 0 0 48px color-mix(in srgb, var(--a) 40%, transparent); overflow: hidden; }
+  .al-caja .hud { inset: 10px; --l: 22px; --c: var(--a); }
+  .al-icono { position: relative; width: 132px; height: 132px; display: grid; place-items: center; color: var(--a); }
+  .al-icono svg, .al-icono .cat { width: 112px; height: 112px; filter: drop-shadow(0 0 16px color-mix(in srgb, var(--a) 70%, transparent)); }
+  .al-icono .cat { background: var(--a); height: auto; }
+  .al-icono b { position: absolute; right: -6px; bottom: -4px; font: 400 44px/1 var(--pantalla); color: var(--noche); background: var(--a); padding: 2px 8px 0; }
   .al-txt { min-width: 0; display: grid; gap: 8px; }
-  .al-tipo { margin: 0; justify-self: start; }
-  .al-nombre { margin: 0; font: 900 52px/1.02 var(--display); letter-spacing: -.02em; color: var(--hueso); text-shadow: 4px 4px 0 var(--sombra), var(--glow); overflow-wrap: anywhere; }
+  .al-tipo { margin: 0; justify-self: start; background: var(--a); }
+  .al-nombre { margin: 0; font: 900 var(--nombre)/1.02 var(--display); letter-spacing: -.02em; color: var(--hueso); text-shadow: 4px 4px 0 color-mix(in srgb, var(--a) 45%, #000), 0 0 18px color-mix(in srgb, var(--a) 55%, transparent); overflow-wrap: anywhere; }
   .al-msg { margin: 0; font: 500 22px/1.3 var(--lectura); color: var(--liquen); overflow-wrap: anywhere; }
   .al-msg:empty { display: none; }
-  .al-barra { position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: var(--verde); transform-origin: left; box-shadow: var(--glow); }
-
-  .alerta.on { animation: al-on .55s cubic-bezier(.2,.7,.2,1) both; }
+  .al-barra { position: absolute; left: 0; bottom: 0; height: 5px; width: 100%; background: var(--a); transform-origin: left; box-shadow: 0 0 14px var(--a); }
   .alerta.on .al-barra { animation: al-tiempo var(--dur, 7s) linear both; }
-  .alerta.on .al-nombre { animation: al-glitch .5s steps(2) .35s both; }
-  .alerta.off { animation: al-off .45s cubic-bezier(.6,0,.8,.4) both; }
-  @keyframes al-on { 0% { opacity: 1; transform: translateX(-50%) scale(0, .02); filter: brightness(3); } 45% { opacity: 1; transform: translateX(-50%) scale(1, .02); filter: brightness(3); } 100% { opacity: 1; transform: translateX(-50%) scale(1, 1); filter: none; } }
-  @keyframes al-off { 0% { opacity: 1; transform: translateX(-50%) scale(1, 1); } 55% { opacity: 1; transform: translateX(-50%) scale(1, .02); filter: brightness(3); } 100% { opacity: 0; transform: translateX(-50%) scale(0, .02); } }
   @keyframes al-tiempo { from { transform: scaleX(1); } to { transform: scaleX(0); } }
-  @keyframes al-glitch { 0% { transform: translateX(-8px); text-shadow: -6px 0 rgba(12,238,0,.8), 4px 4px 0 var(--sombra); } 50% { transform: translateX(5px); } 100% { transform: none; } }
+  .alerta.off { animation: al-off .45s cubic-bezier(.6,0,.8,.4) both; }
+  @keyframes al-off { 0% { opacity: 1; transform: translateX(-50%) scale(1, 1); } 55% { opacity: 1; transform: translateX(-50%) scale(1, .02); filter: brightness(3); } 100% { opacity: 0; transform: translateX(-50%) scale(0, .02); } }
+
+  /* ---------- follow: chico, entra deslizando ---------- */
+  .t-follow { --a: #0CEE00; --w: 620px; --nombre: 40px; }
+  .t-follow .al-caja { grid-template-columns: 96px 1fr; padding: 20px 28px 24px 22px; gap: 20px; }
+  .t-follow .al-icono { width: 96px; height: 96px; }
+  .t-follow .al-icono .cat { width: 84px; }
+  .t-follow.on { animation: in-slide .6s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes in-slide { 0% { opacity: 0; transform: translateX(-140%) skewX(-18deg); } 70% { opacity: 1; transform: translateX(-46%) skewX(6deg); } 100% { opacity: 1; transform: translateX(-50%); } }
+
+  /* ---------- sub: dorado, se prende como CRT, con chispas ---------- */
+  .t-sub { --a: #ffd166; --w: 840px; --nombre: 58px; }
+  .t-sub.on, .t-bits.on { animation: in-crt .6s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes in-crt { 0% { opacity: 1; transform: translateX(-50%) scale(0, .02); filter: brightness(3); } 45% { opacity: 1; transform: translateX(-50%) scale(1, .02); filter: brightness(3); } 100% { opacity: 1; transform: translateX(-50%) scale(1, 1); } }
+  .t-sub.on .al-icono svg { animation: girar 1.2s cubic-bezier(.2,.7,.2,1) .3s both; }
+  @keyframes girar { from { transform: rotate(-200deg) scale(.2); } to { transform: none; } }
+
+  /* ---------- regalo: cae de arriba y rebota ---------- */
+  .t-gift { --a: #ff8ab3; --w: 780px; --nombre: 50px; }
+  .t-gift.on { animation: in-cae .8s cubic-bezier(.3,1.5,.5,1) both; }
+  @keyframes in-cae { 0% { opacity: 0; transform: translate(-50%, -260px) rotate(-4deg); } 100% { opacity: 1; transform: translateX(-50%); } }
+  .t-gift.on .al-icono svg { animation: sacude .5s ease-in-out .7s 3; }
+  @keyframes sacude { 25% { transform: rotate(-10deg); } 75% { transform: rotate(10deg); } }
+
+  /* ---------- lluvia de subs: grande, explota con confeti ---------- */
+  .t-giftbomb { --a: #c3a6ff; --w: 940px; --top: 120px; --nombre: 64px; }
+  .t-giftbomb.on { animation: in-pop .7s cubic-bezier(.2,1.6,.4,1) both; }
+  @keyframes in-pop { 0% { opacity: 0; transform: translateX(-50%) scale(.3); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
+
+  /* ---------- bits: celeste, el número cuenta ---------- */
+  .t-bits { --a: #7ad7ff; --w: 780px; --nombre: 52px; }
+  .t-bits.on .al-icono svg { animation: brilla 1.4s ease-in-out infinite; }
+  @keyframes brilla { 50% { filter: drop-shadow(0 0 30px #7ad7ff) brightness(1.4); } }
+
+  /* partículas (chispas, confeti) */
+  .part { position: absolute; left: 50%; top: 50%; width: 0; height: 0; pointer-events: none; }
+  .part i { position: absolute; width: var(--s); height: var(--s); background: var(--c); border-radius: var(--r, 0); opacity: 0;
+    animation: vuela var(--t) cubic-bezier(.15,.7,.3,1) var(--d) both; }
+  @keyframes vuela { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--g)); } }
+
+  /* ================= raid: te hackean la pantalla ================= */
+  #hack { position: absolute; inset: 0; display: none; overflow: hidden; --rojo: #ff2d2d; }
+  #hack.on { display: block; }
+  .h-tinte { position: absolute; inset: 0; background: rgba(255, 30, 30, .16); mix-blend-mode: screen; animation: h-flick .12s steps(2) infinite; }
+  .h-tinte::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, rgba(0,0,0,.35) 0 2px, transparent 2px 4px); }
+  @keyframes h-flick { 50% { opacity: .55; } }
+  .h-franja { position: absolute; left: 0; right: 0; background: var(--rojo); mix-blend-mode: screen; opacity: 0; animation: h-franja var(--t) steps(3) var(--d) infinite; }
+  @keyframes h-franja { 0% { opacity: .0; transform: translateX(0); } 20% { opacity: .55; transform: translateX(var(--x)); } 40% { opacity: .15; transform: translateX(calc(var(--x) * -1)); } 60%, 100% { opacity: 0; } }
+  .h-ruido { position: absolute; inset: 0; opacity: .0; background: repeating-radial-gradient(circle at 17% 32%, rgba(255,255,255,.12) 0 1px, transparent 1px 3px); animation: h-ruido .2s steps(2) infinite; }
+  @keyframes h-ruido { 0% { transform: translate(0,0); } 50% { transform: translate(-6px, 4px); } }
+  .h-senal .h-ruido { opacity: 1; }
+  .h-cinta { position: absolute; left: 0; right: 0; height: 58px; background: repeating-linear-gradient(-45deg, var(--rojo) 0 28px, #120202 28px 56px); display: flex; align-items: center; overflow: hidden; opacity: 0; }
+  .h-cinta.arr { top: 0; } .h-cinta.aba { bottom: 0; }
+  .h-cinta span { white-space: nowrap; padding: 6px 0; background: #120202; font: 700 24px/1 var(--mono); letter-spacing: .3em; color: var(--rojo); animation: corre 14s linear infinite; }
+  .h-cinta.aba span { animation-direction: reverse; }
+  @keyframes corre { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  .h-term { position: absolute; left: 120px; top: 170px; width: 1080px; background: rgba(10, 2, 2, .94); border: 3px solid var(--rojo); box-shadow: 0 0 60px rgba(255,45,45,.45); opacity: 0; transform: scale(.96); }
+  .h-term-bar { display: flex; justify-content: space-between; padding: 10px 16px; background: var(--rojo); color: #120202; font: 700 18px/1 var(--mono); letter-spacing: .12em; }
+  .h-lineas { padding: 22px 26px 10px; font: 400 40px/1.25 var(--pantalla); color: #ff8a8a; min-height: 300px; white-space: pre-wrap; text-shadow: 0 0 10px rgba(255,45,45,.6); }
+  .h-lineas b { color: #fff; font-weight: 400; }
+  .h-lineas .ok { color: var(--verde); text-shadow: var(--glow); }
+  .h-lineas .cursor { display: inline-block; width: 18px; height: 32px; background: #ff8a8a; vertical-align: -4px; animation: h-flick .5s steps(1) infinite; }
+  .h-prog { margin: 6px 26px 26px; height: 34px; border: 2px solid var(--rojo); position: relative; }
+  .h-prog i { position: absolute; inset: 3px auto 3px 3px; width: 0; background: repeating-linear-gradient(90deg, var(--rojo) 0 18px, transparent 18px 24px); }
+  .h-prog span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font: 400 30px/1 var(--pantalla); color: #fff; }
+  .h-gran { position: absolute; left: 0; right: 0; top: 330px; text-align: center; opacity: 0; }
+  .h-gran small { display: inline-block; padding: 8px 18px; background: var(--rojo); color: #120202; font: 700 26px/1 var(--mono); letter-spacing: .4em; }
+  .h-gran h2 { position: relative; margin: 26px 0 0; font: 900 170px/.95 var(--display); letter-spacing: -.04em; color: #fff; overflow-wrap: anywhere; padding: 0 60px; }
+  .h-gran h2::before, .h-gran h2::after { content: attr(data-t); position: absolute; inset: 0; padding: 0 60px; }
+  .h-gran h2::before { color: var(--rojo); transform: translate(-8px, 2px); mix-blend-mode: screen; animation: rgb1 .9s steps(2) infinite; }
+  .h-gran h2::after { color: #3cf; transform: translate(8px, -2px); mix-blend-mode: screen; animation: rgb2 .7s steps(2) infinite; }
+  @keyframes rgb1 { 50% { transform: translate(-16px, 4px); clip-path: inset(10% 0 55% 0); } }
+  @keyframes rgb2 { 50% { transform: translate(14px, -4px); clip-path: inset(50% 0 10% 0); } }
+  .h-gran p { margin: 22px 0 0; font: 400 64px/1 var(--pantalla); color: #ff8a8a; text-shadow: 0 0 16px rgba(255,45,45,.7); }
+  .h-fin { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 18px; background: rgba(7, 11, 7, .9); opacity: 0; }
+  .h-fin .cat { width: 160px; filter: drop-shadow(0 0 30px rgba(12,238,0,.8)); }
+  .h-fin b { font: 900 64px/1 var(--display); color: var(--verde); text-shadow: var(--glow); }
+  .h-fin span { font: 400 44px/1 var(--pantalla); color: var(--hueso); letter-spacing: .06em; }
+  /* fases */
+  #hack.f1 .h-cinta, #hack.f2 .h-cinta, #hack.f3 .h-cinta { opacity: 1; transition: opacity .2s; }
+  #hack.f2 .h-term { opacity: 1; transform: none; transition: opacity .15s, transform .3s cubic-bezier(.2,1.5,.4,1); }
+  #hack.f3 .h-term { opacity: 0; transform: scale(1.06) skewX(-8deg); transition: all .25s ease-in; }
+  #hack.f3 .h-gran { opacity: 1; animation: h-entra .5s steps(4) both, h-tiembla .12s linear .5s infinite; }
+  @keyframes h-entra { 0% { opacity: 0; transform: scale(1.6); filter: blur(10px); } 100% { opacity: 1; transform: none; filter: none; } }
+  @keyframes h-tiembla { 25% { transform: translate(3px, -2px); } 75% { transform: translate(-3px, 2px); } }
+  #hack.f4 .h-fin { opacity: 1; animation: in-fin .5s cubic-bezier(.2,.7,.2,1) both; }
+  #hack.f4 .h-tinte, #hack.f4 .h-franja, #hack.f4 .h-cinta { display: none; }
+  @keyframes in-fin { 0% { clip-path: inset(50% 0 50% 0); filter: brightness(3); } 100% { clip-path: inset(0 0 0 0); filter: none; } }
+  #hack.f5 { animation: h-apaga .5s cubic-bezier(.6,0,.8,.4) both; }
+  @keyframes h-apaga { 55% { transform: scale(1, .01); filter: brightness(3); } 100% { transform: scale(0, .01); opacity: 0; } }
 </style>
 </head>
 <body data-base="1920">
 <div id="z">
-<div class="alerta" id="alerta" aria-live="polite">
-  <div class="al-caja scan">
-    <div class="hud"></div>
-    <div class="al-icono"><span class="cat"></span><b id="al-num" hidden></b></div>
-    <div class="al-txt">
-      <span class="chip al-tipo" id="al-tipo"></span>
-      <p class="al-nombre" id="al-nombre"></p>
-      <p class="al-msg" id="al-msg"></p>
+  <div class="alerta" id="alerta" aria-live="polite">
+    <div class="al-caja scan">
+      <div class="hud"></div>
+      <div class="al-icono" id="al-icono"></div>
+      <div class="al-txt">
+        <span class="chip al-tipo" id="al-tipo"></span>
+        <p class="al-nombre" id="al-nombre"></p>
+        <p class="al-msg" id="al-msg"></p>
+      </div>
+      <i class="al-barra"></i>
     </div>
-    <i class="al-barra"></i>
+    <div class="part" id="part"></div>
   </div>
-</div>
+
+  <div id="hack" aria-live="assertive">
+    <div class="h-tinte"></div>
+    <div class="h-ruido"></div>
+    <div id="h-franjas"></div>
+    <div class="h-cinta arr"><span id="h-cinta1"></span></div>
+    <div class="h-cinta aba"><span id="h-cinta2"></span></div>
+    <div class="h-term">
+      <div class="h-term-bar"><span>ROOT@CAT-SIGNAL</span><span>⚠ ACCESO NO AUTORIZADO</span></div>
+      <div class="h-lineas" id="h-lineas"></div>
+      <div class="h-prog"><i id="h-barra"></i><span id="h-pct">0%</span></div>
+    </div>
+    <div class="h-gran"><small>RAID ENTRANTE</small><h2 id="h-nombre"></h2><p id="h-gente"></p></div>
+    <div class="h-fin"><span class="cat"></span><b>SISTEMA RECUPERADO</b><span id="h-bienv"></span></div>
+  </div>
 </div>
 <script src="assets/cat-stream.js"></script>
 <script>
@@ -55,48 +160,144 @@
   const box = $('#alerta');
   const baseDur = +CAT.opt('duracion', 7);
   const showMsg = CAT.opt('mensajes', '1') !== '0';
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  // texto y sonido de cada tipo
+  /* íconos de cada tipo */
+  const ICON = {
+    follow: '<span class="cat"></span>',
+    sub: '<svg viewBox="0 0 100 100"><path fill="currentColor" d="M50 4l13 30 32 3-24 21 7 32-28-17-28 17 7-32L5 37l32-3z"/><path fill="#070b07" d="M50 30l6 14 15 1-11 10 3 15-13-8-13 8 3-15-11-10 15-1z" opacity=".35"/></svg>',
+    gift: '<svg viewBox="0 0 100 100"><g fill="currentColor"><rect x="10" y="38" width="80" height="20" rx="3"/><rect x="16" y="58" width="68" height="36" rx="3"/><path d="M50 36c-6-14-26-22-30-10-3 10 16 11 30 10zM50 36c6-14 26-22 30-10 3 10-16 11-30 10z"/></g><rect x="45" y="38" width="10" height="56" fill="#070b07" opacity=".45"/></svg>',
+    giftbomb: '<svg viewBox="0 0 100 100"><g fill="currentColor"><rect x="6" y="46" width="44" height="12" rx="2"/><rect x="10" y="58" width="36" height="30" rx="2"/><rect x="50" y="30" width="44" height="12" rx="2"/><rect x="54" y="42" width="36" height="46" rx="2"/><path d="M28 44c-4-9-16-13-18-6-1 6 9 7 18 6zM28 44c4-9 16-13 18-6 1 6-9 7-18 6zM72 28c-4-9-16-13-18-6-1 6 9 7 18 6zM72 28c4-9 16-13 18-6 1 6-9 7-18 6z"/></g></svg>',
+    bits: '<svg viewBox="0 0 100 100"><path fill="currentColor" d="M50 6l36 30-36 58L14 36z"/><path fill="#070b07" opacity=".3" d="M50 6v88L14 36zM14 36h72L50 48z"/></svg>'
+  };
   const KIND = {
     follow:   (e) => ({ tipo: 'Nuevo seguidor', nombre: e.name, msg: 'Bienvenido a la señal', sound: [[660, 0, .12], [990, .1, .25]] }),
-    sub:      (e) => ({ tipo: e.months > 1 ? `Sub · ${e.months} meses` : 'Nuevo sub', nombre: e.name, msg: e.text || e.tier, num: e.months > 1 ? e.months : '', sound: [[523, 0, .12], [659, .1, .12], [784, .2, .12], [1047, .3, .4]] }),
+    sub:      (e) => ({ tipo: e.months > 1 ? `Sub · ${e.months} meses` : 'Nuevo sub', nombre: e.name, msg: e.text || e.tier, num: e.months > 1 ? e.months : '', parts: ['#ffd166', '#fff3c4'], sound: [[523, 0, .12], [659, .1, .12], [784, .2, .12], [1047, .3, .4]] }),
     gift:     (e) => ({ tipo: 'Sub de regalo', nombre: e.name, msg: `le regaló un sub a ${e.to}`, sound: [[784, 0, .1], [988, .09, .1], [1175, .18, .35]] }),
-    giftbomb: (e) => ({ tipo: 'Lluvia de subs', nombre: e.name, msg: `regaló ${e.count} subs al chat`, num: '×' + e.count, sound: [[523, 0, .08], [659, .07, .08], [784, .14, .08], [1047, .21, .08], [1319, .28, .45]] }),
-    bits:     (e) => ({ tipo: `${e.amount} bits`, nombre: e.name, msg: e.text, num: e.amount, sound: [[1200, 0, .06], [1600, .06, .06], [2000, .12, .3]] }),
-    raid:     (e) => ({ tipo: 'Raid', nombre: e.name, msg: `llega con ${e.viewers} ${e.viewers === 1 ? 'persona' : 'personas'}`, num: e.viewers, sound: [[220, 0, .25], [330, .2, .25], [440, .4, .25], [880, .6, .6]] })
+    giftbomb: (e) => ({ tipo: 'Lluvia de subs', nombre: e.name, msg: `regaló ${e.count} subs al chat`, num: '×' + e.count, parts: ['#c3a6ff', '#ff8ab3', '#ffd166', '#7ad7ff', '#0CEE00'], confeti: true, sound: [[523, 0, .08], [659, .07, .08], [784, .14, .08], [1047, .21, .08], [1319, .28, .45]] }),
+    bits:     (e) => ({ tipo: `${e.amount} bits`, nombre: e.name, msg: e.text, num: e.amount, cuenta: e.amount, parts: ['#7ad7ff', '#ffffff'], sound: [[1200, 0, .06], [1600, .06, .06], [2000, .12, .3]] })
   };
-  // ?tipos=sub,bits,raid  para elegir cuáles se muestran
   const allowed = new Set(CAT.opt('tipos', 'follow,sub,gift,giftbomb,bits,raid').split(','));
 
   const queue = [];
   let busy = false;
   CAT.on('alert', (e) => {
-    if (!allowed.has(e.type) || !KIND[e.type]) return;
+    if (!allowed.has(e.type) || !(KIND[e.type] || e.type === 'raid')) return;
     if (e.type === 'bits' && e.amount < +CAT.opt('minbits', 1)) return;
     queue.push(e); next();
   });
 
-  function next() {
+  async function next() {
     if (busy || !queue.length) return;
     busy = true;
-    const e = queue.shift(), k = KIND[e.type](e);
+    const e = queue.shift();
+    if (e.type === 'raid') await raid(e); else await alerta(e);
+    busy = false; next();
+  }
+
+  /* ---------- alertas comunes ---------- */
+  async function alerta(e) {
+    const k = KIND[e.type](e);
     const dur = baseDur + (showMsg && k.msg && k.msg.length > 40 ? 2 : 0);
+    $('#al-icono').innerHTML = ICON[e.type] + (k.num ? `<b>${CAT.esc(k.num)}</b>` : '');
     $('#al-tipo').textContent = k.tipo;
     $('#al-nombre').textContent = k.nombre;
     $('#al-msg').textContent = showMsg ? (k.msg || '') : '';
-    const num = $('#al-num'); num.hidden = !k.num; num.textContent = k.num || '';
     box.style.setProperty('--dur', dur + 's');
-    box.className = 'alerta'; void box.offsetWidth; box.className = 'alerta on';
-    // blip de terminal al prenderse la caja y, encima, el sonido del tipo (si no carga, suena el sintetizado)
+    box.className = 'alerta t-' + e.type; void box.offsetWidth; box.className = 'alerta t-' + e.type + ' on';
     CAT.play('encender', 0.45);
     setTimeout(() => CAT.play(e.type, 1, k.sound), 140);
-    setTimeout(() => {
-      box.className = 'alerta off';
-      setTimeout(() => { busy = false; next(); }, 700);
-    }, dur * 1000);
+    if (k.parts) setTimeout(() => burst(k.parts, k.confeti ? 90 : 36, !!k.confeti), 350);
+    if (k.cuenta) cuenta($('#al-tipo'), k.cuenta, ' bits');
+    await wait(dur * 1000);
+    box.className = 'alerta t-' + e.type + ' off';
+    await wait(700);
+    $('#part').innerHTML = '';
+  }
+  function burst(colors, n, confeti) {
+    const p = $('#part');
+    let html = '';
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, r = (confeti ? 380 : 260) + Math.random() * 320;
+      const x = Math.cos(a) * r * 1.4, y = Math.sin(a) * r * 0.7 + (confeti ? 260 : 0);
+      const s = confeti ? 8 + Math.random() * 12 : 5 + Math.random() * 7;
+      html += `<i style="--c:${colors[i % colors.length]};--x:${x.toFixed(0)}px;--y:${y.toFixed(0)}px;--g:${(Math.random() * 720 - 360).toFixed(0)}deg;--s:${s.toFixed(0)}px;--t:${(1.2 + Math.random() * 1.2).toFixed(2)}s;--d:${(Math.random() * .25).toFixed(2)}s;${confeti ? '' : '--r:50%'}"></i>`;
+    }
+    p.innerHTML = html;
+  }
+  function cuenta(el, to, suf) {
+    const t0 = performance.now(), T = 1400;
+    const step = (now) => { const f = Math.min(1, (now - t0) / T), v = Math.round(to * (1 - Math.pow(1 - f, 3))); el.textContent = v + suf; if (f < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
   }
 
-  CAT.preload(['encender', 'follow', 'sub', 'gift', 'giftbomb', 'bits', 'raid']);
+  /* ---------- raid: hackeo de pantalla ---------- */
+  const hack = $('#hack');
+  async function raid(e) {
+    const name = String(e.name), n = e.viewers || 0;
+    // franjas de glitch al azar
+    let fr = '';
+    for (let i = 0; i < 14; i++) fr += `<div class="h-franja" style="top:${(Math.random() * 100).toFixed(1)}%;height:${(4 + Math.random() * 60).toFixed(0)}px;--x:${(Math.random() * 120 - 60).toFixed(0)}px;--t:${(.25 + Math.random() * .5).toFixed(2)}s;--d:${(Math.random() * .4).toFixed(2)}s"></div>`;
+    $('#h-franjas').innerHTML = fr;
+    const tape = `⚠ INTRUSIÓN DETECTADA ⚠ ${name.toUpperCase()} ESTÁ ADENTRO ⚠ RAID EN CURSO `;
+    $('#h-cinta1').textContent = $('#h-cinta2').textContent = tape.repeat(8);
+    $('#h-lineas').innerHTML = ''; $('#h-barra').style.width = '0'; $('#h-pct').textContent = '0%';
+    $('#h-nombre').textContent = name; $('#h-nombre').dataset.t = name;
+    $('#h-gente').textContent = `+${n} ${n === 1 ? 'INVASOR' : 'INVASORES'} EN LA SEÑAL`;
+    $('#h-bienv').textContent = `BIENVENIDOS, GENTE DE ${name.toUpperCase()}`;
+
+    // fase 1: se corta la señal
+    hack.className = 'on h-senal f1';
+    CAT.play('senal', 0.8);
+    await wait(1300);
+    // fase 2: terminal que escribe sola
+    hack.className = 'on f2';
+    CAT.play('alarma', 0.55);
+    const L = $('#h-lineas');
+    const lines = [
+      [`> conexión entrante desde <b>twitch.tv/${CAT.esc(name.toLowerCase())}</b>`, ''],
+      ['> saltando firewall CAT ........ ', '<span class="ok">OK</span>'],
+      [`> inyectando <b>${n}</b> ${n === 1 ? 'usuario' : 'usuarios'} ........ `, '<span class="ok">OK</span>'],
+      ['> tomando el control de la pantalla', '']
+    ];
+    let done = '';
+    for (const [txt, end] of lines) {
+      const plain = txt.replace(/<[^>]+>/g, '');
+      for (let i = 1; i <= plain.length; i += 2) {
+        L.innerHTML = done + CAT.esc(plain.slice(0, i)) + '<span class="cursor"></span>';
+        if (i % 6 === 1) CAT.play('tecla', 0.25);
+        await wait(22);
+      }
+      done += txt + end + '\n';
+      L.innerHTML = done + '<span class="cursor"></span>';
+      await wait(260);
+    }
+    // barra de progreso
+    const t0 = performance.now();
+    await new Promise((r) => {
+      const step = (now) => {
+        const f = Math.min(1, (now - t0) / 1500);
+        $('#h-barra').style.width = `calc(${(f * 100).toFixed(1)}% - 6px)`;
+        $('#h-pct').textContent = Math.round(f * 100) + '%';
+        f < 1 ? requestAnimationFrame(step) : r();
+      };
+      requestAnimationFrame(step);
+    });
+    await wait(300);
+    // fase 3: el nombre gigante
+    hack.className = 'on f3';
+    CAT.play('raid', 1, [[220, 0, .25], [330, .2, .25], [440, .4, .25], [880, .6, .6]]);
+    await wait(+CAT.opt('raidnombre', 4.2) * 1000);
+    // fase 4: CAT recupera el sistema
+    hack.className = 'on f4';
+    CAT.play('encender', 0.7); setTimeout(() => CAT.play('sub', 0.7), 160);
+    await wait(2600);
+    hack.className = 'on f4 f5';
+    await wait(520);
+    hack.className = '';
+  }
+
+  CAT.preload(['encender', 'follow', 'sub', 'gift', 'giftbomb', 'bits', 'raid', 'senal', 'alarma', 'tecla']);
   CAT.start({ chat: true });
 })();
 </script>
