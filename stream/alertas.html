@@ -8,7 +8,7 @@
 <style>
   /* lienzo pensado para 1920×1080; la alerta va arriba al centro */
   body { width: 100vw; height: 100vh; }
-  .alerta { position: absolute; left: 50%; top: 6vh; width: min(760px, 92vw); transform: translateX(-50%); opacity: 0; pointer-events: none; }
+  .alerta { position: absolute; left: 50%; top: 64px; width: 760px; transform: translateX(-50%); opacity: 0; pointer-events: none; }
   .al-caja { position: relative; display: grid; grid-template-columns: 132px 1fr; align-items: center; gap: 26px; padding: 26px 34px 30px 30px;
     background: radial-gradient(ellipse 70% 120% at 12% 50%, rgba(12,238,0,.2), transparent 70%), rgba(7, 11, 7, .94);
     border: 2px solid var(--verde); box-shadow: 0 0 0 6px rgba(7,11,7,.6), 0 0 48px rgba(12,238,0,.35); overflow: hidden; }
@@ -33,7 +33,8 @@
   @keyframes al-glitch { 0% { transform: translateX(-8px); text-shadow: -6px 0 rgba(12,238,0,.8), 4px 4px 0 var(--sombra); } 50% { transform: translateX(5px); } 100% { transform: none; } }
 </style>
 </head>
-<body>
+<body data-base="1920">
+<div id="z">
 <div class="alerta" id="alerta" aria-live="polite">
   <div class="al-caja scan">
     <div class="hud"></div>
@@ -45,6 +46,7 @@
     </div>
     <i class="al-barra"></i>
   </div>
+</div>
 </div>
 <script src="assets/cat-stream.js"></script>
 <script>

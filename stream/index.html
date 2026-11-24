@@ -74,6 +74,7 @@
     <h2><small>01</small>Tu canal</h2>
     <div class="campos">
       <label class="campo"><span>Canal de Twitch</span><input type="text" id="canal" placeholder="tu_canal" autocomplete="off" spellcheck="false"></label>
+      <label class="campo"><span>Resolución del stream</span><select id="res"><option value="720">1280×720</option><option value="1080">1920×1080</option></select></label>
       <label class="campo"><span>Volumen de alertas (%)</span><input type="number" id="volumen" min="0" max="100" value="80"></label>
     </div>
     <p>Sonidos: follow, sub, regalo, lluvia, bits y raid tienen cada uno el suyo (en <code>assets/sonidos/</code>; reemplazá el <code>.ogg</code> con el mismo nombre para cambiarlo). Probalos con los botones de arriba.</p>
@@ -102,7 +103,7 @@
 
   <section class="caja">
     <h2><small>03</small>Fuentes para Meld</h2>
-    <p>En Meld Studio: agregá una capa de tipo <b>navegador / Browser</b> a la escena, pegá la URL y poné el tamaño indicado. Cualquier cambio de opciones acá cambia la URL: copiala de nuevo.</p>
+    <p>En Meld Studio: agregá una capa de tipo <b>navegador / Browser</b> a la escena, pegá la URL y poné el tamaño indicado (ya está calculado para la resolución que elegiste arriba). El marco de cámara va del mismo tamaño que tu cámara: si la tuya es otra medida, usá esa. Cualquier cambio de opciones acá cambia la URL: copiala de nuevo.</p>
     <label class="check"><input type="checkbox" id="demo"> Vistas previas en modo demo (eventos de ejemplo automáticos)</label>
     <div class="fuentes" id="fuentes"></div>
   </section>
@@ -117,7 +118,7 @@
 
   /* ---------- estado guardado ---------- */
   const KEY = 'cat-stream';
-  let S = { canal: '', volumen: 80, cid: '', token: '', demo: false, o: {} };
+  let S = { canal: '', volumen: 80, cid: '', token: '', demo: false, res: '720', o: {} };
   try { S = { ...S, ...JSON.parse(localStorage.getItem(KEY)) }; } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
@@ -140,11 +141,14 @@
       ops: [['min', 'Cuenta regresiva (min)', 'number', 0], ['titulo', 'Título propio', 'text', '']] },
     { id: 'fin', name: 'Escena: fin', size: [1920, 1080], file: 'escena.html', fixed: { modo: 'fin' },
       ops: [['titulo', 'Título propio', 'text', ''], ['sub', 'Bajada', 'text', '']] },
-    { id: 'camara', name: 'Marco de cámara', size: [640, 360], file: 'camara.html',
+    { id: 'camara', name: 'Marco de cámara', size: [960, 540], file: 'camara.html',
       ops: [['nombre', 'Nombre', 'text', 'ESPARRAGO'], ['abajo', 'Texto de abajo', 'text', 'A CAT SIGNATURE'], ['redondo', 'Esquinas redondas', 'check', false]] },
     { id: 'barra', name: 'Barra inferior', size: [1920, 64], file: 'barra.html', twitch: true,
       ops: [['msgs', 'Mensajes (separados por |)', 'text', 'Seguime en YouTube: @Esparragoh|Mis mods: github.com/EsparragoCAT|A CAT Signature'], ['ultimos', 'Últimos (sub,bits,raid,follow)', 'text', 'sub,bits,raid']] }
   ];
+
+  const K = () => (S.res === '1080' ? 1 : 2 / 3);
+  const sz = (f) => [Math.round(f.size[0] * K()), Math.round(f.size[1] * K())];
 
   function url(f, preview) {
     const p = new URLSearchParams();
@@ -157,6 +161,7 @@
       else if (String(v) !== String(def) || ['min', 'nombre'].includes(k)) { if (v !== '' && v != null) p.set(k, v); }
     }
     if (f.id === 'alertas') p.set('volumen', S.volumen);
+    if ((f.id === 'chat' || f.id === 'camara') && K() !== 1) p.set('zoom', K().toFixed(3));
     if (f.twitch && S.cid && S.token && !preview) { p.set('cid', S.cid); p.set('token', S.token); }
     if (preview) { p.set('sonido', '0'); if (S.demo) p.set('demo', '1'); }
     return base + f.file + '?' + p.toString();
@@ -165,8 +170,8 @@
   const box = $('#fuentes');
   box.innerHTML = FU.map((f) => `
     <article class="fuente" data-f="${f.id}">
-      <div class="fu-cab"><b>${f.name}</b><span>${f.size[0]}×${f.size[1]}</span></div>
-      <div class="vista" style="aspect-ratio:${f.size[0]}/${Math.max(f.size[1], f.size[0] / 6)}"><iframe title="Vista previa: ${f.name}" width="${f.size[0]}" height="${f.size[1]}"></iframe></div>
+      <div class="fu-cab"><b>${f.name}</b><span>${sz(f)[0]}×${sz(f)[1]}</span></div>
+      <div class="vista" style="aspect-ratio:${sz(f)[0]}/${Math.max(sz(f)[1], sz(f)[0] / 6)}"><iframe title="Vista previa: ${f.name}" width="${sz(f)[0]}" height="${sz(f)[1]}"></iframe></div>
       <div class="fu-url"><input type="text" readonly aria-label="URL de ${f.name}"><button class="btn pri" type="button" data-copy>Copiar</button></div>
       <div class="fu-op"><div class="campos">${f.ops.map(([k, lbl, type, def, choices]) => {
         const v = (S.o[f.id] || {})[k] ?? def;
@@ -209,6 +214,7 @@
   });
 
   /* ---------- canal y opciones generales ---------- */
+  $('#res').value = S.res; $('#res').addEventListener('change', (e) => { S.res = e.target.value; save(); location.reload(); });
   $('#canal').value = S.canal; $('#volumen').value = S.volumen; $('#cid').value = S.cid; $('#demo').checked = S.demo;
   $('#canal').addEventListener('input', (e) => { S.canal = e.target.value.replace(/[^a-zA-Z0-9_]/g, ''); save(); clearTimeout(refresh.t); refresh.t = setTimeout(() => refresh(), 500); });
   $('#volumen').addEventListener('input', (e) => { S.volumen = Math.max(0, Math.min(100, +e.target.value || 0)); save(); refresh('alertas'); });

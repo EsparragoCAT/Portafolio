@@ -81,7 +81,7 @@
   const mask = new Image(); mask.src = 'assets/cat-mask.png';
   let W, H, sun = null;
   function size() {
-    const d = Math.min(2, window.devicePixelRatio || 1);
+    const d = Math.min(1.5, window.devicePixelRatio || 1);
     W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d); sun = null;
   }
   function makeSun() {
@@ -96,7 +96,12 @@
   }
   addEventListener('resize', size); size();
   const t0 = performance.now();
+  // el stream va a 30 fps (?fps=60 si algún día cambia): no tiene sentido dibujar más cuadros
+  const step = 1000 / +CAT.opt('fps', 30);
+  let last = -1e9;
   function frame(now) {
+    if (now - last < step - 2) { requestAnimationFrame(frame); return; }
+    last = now;
     const t = (now - t0) / 1000, hy = H * 0.64, vx = W / 2;
     ctx.fillStyle = '#070b07'; ctx.fillRect(0, 0, W, H);
     let g = ctx.createRadialGradient(vx, hy, 0, vx, hy, W * 0.5);

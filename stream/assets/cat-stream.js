@@ -199,6 +199,19 @@ window.CAT = (function () {
   }
   function preload(names) { if (opt('sonido', '1') !== '0') names.forEach((n) => { const s = opt('snd_' + n, 'assets/sonidos/' + n + '.ogg'); if (!cache[s]) { cache[s] = new Audio(s); cache[s].preload = 'auto'; } }); }
 
+  /* ---------- escala ----------
+     El contenido se arma como si la fuente fuera del tamaño de diseño y después se achica o agranda para entrar.
+     <body data-base="1920"> escala sola según el ancho de la fuente; si no, ?zoom=0.667 (lo pone el panel para 720p). */
+  function fitScale() {
+    const z = document.getElementById('z'); if (!z) return;
+    const base = +document.body.dataset.base || 0;
+    const k = +opt('zoom', 0) || (base ? innerWidth / base : 1);
+    if (Math.abs(k - 1) < 0.001) { z.removeAttribute('style'); return; }
+    z.style.cssText = `position:absolute;left:0;top:0;width:${100 / k}%;height:${100 / k}%;transform:scale(${k});transform-origin:0 0`;
+  }
+  addEventListener('resize', fitScale);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fitScale); else fitScale();
+
   function start({ chat = true } = {}) {
     if (opt('demo')) {
       const every = +opt('cada', 7) * 1000;
